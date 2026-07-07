@@ -1,0 +1,11 @@
+packages:
+  - "apps/web"
+  - "apps/render"
+  - "packages/*"
+
+# Packages allowed to run install/build scripts (pnpm 10 blocks others).
+# Moved here from apps/web (workspace-level config). Remotion's render service
+# may need additional entries approved on first real render (`pnpm approve-builds`).
+onlyBuiltDependencies:
+  - esbuild
+  - lightningcss

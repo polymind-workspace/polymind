@@ -1,0 +1,19 @@
+{
+  "name": "polymind",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "./dev.sh",
+    "dev:web": "pnpm --filter web dev",
+    "dev:api": "cd apps/api && uv run alembic upgrade head && uv run uvicorn app.main:app --reload --port 8300",
+    "build": "pnpm --filter web build",
+    "typecheck": "pnpm --filter web typecheck",
+    "test": "pnpm --filter web test",
+    "preview": "pnpm --filter web preview"
+  },
+  "devDependencies": {
+    "pnpm": "^10.0.0"
+  },
+  "packageManager": "pnpm@10.0.0"
+}
