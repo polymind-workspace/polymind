@@ -115,10 +115,23 @@ const zh: Resources = {
     },
     menu: {
       invite: "邀请好友",
+      predictions: "我的预测",
       rewards: "奖励",
       settings: "设置",
       language: "语言",
     },
+  },
+  invite: {
+    title: "邀请好友",
+    subtitle: "分享你的邀请链接，好友交易时你将获得奖励。",
+    yourCode: "你的邀请码",
+    copyLink: "复制链接",
+    copied: "已复制",
+    totalInvited: "已邀请好友",
+    totalRewards: "已获得奖励",
+    pendingRewards: "待结算",
+    emptyTitle: "还没有邀请记录",
+    emptySub: "分享链接开始赚取奖励。",
   },
   header: {
     portfolio: "资产组合",

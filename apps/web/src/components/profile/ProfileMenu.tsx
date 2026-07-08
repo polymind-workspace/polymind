@@ -18,7 +18,8 @@ interface ProfileMenuProps {
 export function ProfileMenu({ onLanguage, className }: ProfileMenuProps) {
   const { t } = useTranslation()
   const items: MenuItem[] = [
-    { to: "/predictions", icon: Users, label: t("profile.menu.invite") },
+    { to: "/invite", icon: Users, label: t("profile.menu.invite") },
+    { to: "/predictions", icon: Users, label: t("profile.menu.predictions") },
     { to: "/leaderboard", icon: Gift, label: t("profile.menu.rewards") },
     { to: "/notifications", icon: Settings, label: t("profile.menu.settings") },
     { icon: Globe, label: t("profile.menu.language"), onClick: onLanguage },

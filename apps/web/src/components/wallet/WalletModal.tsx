@@ -1,34 +1,39 @@
-import { useTranslation } from "react-i18next"
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { useWallet } from "@/lib/wallet"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useWallet } from "@/lib/wallet";
+import { cn } from "@/lib/utils";
 
 interface WalletModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function WalletModal({ open, onOpenChange }: WalletModalProps) {
-  const { t } = useTranslation()
-  const { wallets, connected, account, publicKey, connect, disconnect } = useWallet()
-  const showMock = import.meta.env.DEV && wallets.length === 0 && !connected
+const CONNECTORS = [
+  { id: "wallet-standard:phantom", label: "Phantom" },
+  { id: "wallet-standard:solflare", label: "Solflare" },
+  { id: "wallet-standard:backpack", label: "Backpack" },
+];
 
-  const handleConnect = async (name: string) => {
-    await connect(name)
-    onOpenChange(false)
-  }
+export function WalletModal({ open, onOpenChange }: WalletModalProps) {
+  const { t } = useTranslation();
+  const { status, address, isMock, connect, disconnect } = useWallet();
+
+  const handleConnect = async (connectorId: string) => {
+    await connect(connectorId);
+    onOpenChange(false);
+  };
 
   const handleDisconnect = () => {
-    disconnect()
-    onOpenChange(false)
-  }
+    disconnect();
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -36,19 +41,22 @@ export function WalletModal({ open, onOpenChange }: WalletModalProps) {
         <DialogHeader>
           <DialogTitle>{t("wallet.title")}</DialogTitle>
           <DialogDescription>
-            {connected
+            {status === "connected"
               ? t("wallet.connected")
-              : wallets.length === 0
-                ? t("wallet.noWallets")
-                : t("wallet.installPrompt")}
+              : t("wallet.installPrompt")}
           </DialogDescription>
         </DialogHeader>
 
-        {connected ? (
+        {status === "connected" ? (
           <div className="flex flex-col gap-3 py-2">
             <div className="rounded-lg bg-muted p-3 text-sm">
               <div className="text-muted-foreground">Address</div>
-              <div className="mt-1 break-all font-medium">{account?.address ?? publicKey}</div>
+              <div className="mt-1 break-all font-medium">
+                {address}
+                {isMock && (
+                  <span className="ml-2 text-xs text-amber-500">(Mock)</span>
+                )}
+              </div>
             </div>
             <Button variant="outline" onClick={handleDisconnect}>
               {t("common.disconnect")}
@@ -56,28 +64,26 @@ export function WalletModal({ open, onOpenChange }: WalletModalProps) {
           </div>
         ) : (
           <div className="flex flex-col gap-2 py-2">
-            {wallets.map((wallet) => (
+            {CONNECTORS.map((connector) => (
               <Button
-                key={wallet.name}
+                key={connector.id}
                 variant="outline"
                 className={cn(
                   "h-auto justify-start gap-3 px-3 py-2.5 text-left"
                 )}
-                onClick={() => handleConnect(wallet.name)}
+                onClick={() => void handleConnect(connector.id)}
               >
-                <img
-                  src={wallet.icon}
-                  alt={wallet.name}
-                  className="h-6 w-6 rounded-md"
-                />
-                <span className="font-medium">{wallet.name}</span>
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-muted text-xs">
+                  {connector.label[0]}
+                </div>
+                <span className="font-medium">{connector.label}</span>
               </Button>
             ))}
-            {showMock && (
+            {import.meta.env.DEV && (
               <Button
                 variant="secondary"
                 className="h-auto justify-start gap-3 px-3 py-2.5 text-left"
-                onClick={() => handleConnect("__mock__")}
+                onClick={() => void handleConnect("__mock__")}
               >
                 <div className="flex h-6 w-6 items-center justify-center rounded-md bg-muted text-xs">
                   M
@@ -89,5 +95,5 @@ export function WalletModal({ open, onOpenChange }: WalletModalProps) {
         )}
       </DialogContent>
     </Dialog>
-  )
+  );
 }

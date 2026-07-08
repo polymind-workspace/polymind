@@ -39,10 +39,9 @@ export function UserDropdown({ className }: UserDropdownProps) {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const { resolved, toggleTheme } = useTheme()
-  const { account, publicKey, disconnect } = useWallet()
+  const { address, disconnect } = useWallet()
 
-  const address = account?.address ?? publicKey ?? ""
-  const display = `${address.slice(0, 6)}...${address.slice(-4)}`
+  const display = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ""
 
   const handleLogout = () => {
     disconnect()

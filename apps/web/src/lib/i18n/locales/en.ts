@@ -113,10 +113,23 @@ const en = {
     },
     menu: {
       invite: "Invite Friends",
+      predictions: "My Predictions",
       rewards: "Rewards",
       settings: "Settings",
       language: "Language",
     },
+  },
+  invite: {
+    title: "Invite Friends",
+    subtitle: "Share your referral link and earn rewards when they trade.",
+    yourCode: "Your referral code",
+    copyLink: "Copy link",
+    copied: "Copied",
+    totalInvited: "Friends invited",
+    totalRewards: "Rewards earned",
+    pendingRewards: "Pending",
+    emptyTitle: "No invites yet",
+    emptySub: "Share your link to start earning.",
   },
   header: {
     portfolio: "Portfolio",

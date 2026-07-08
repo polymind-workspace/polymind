@@ -1,2 +1,2 @@
-export { WalletProvider, useWallet } from "./WalletProvider"
-export type { WalletAccount } from "./WalletProvider"
+export { WalletProvider, useWallet } from "./WalletProvider";
+export type { WalletContextValue, WalletStatus } from "./WalletProvider";

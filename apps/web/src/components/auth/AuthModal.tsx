@@ -1,37 +1,42 @@
-import { useState } from "react"
-import { useTranslation } from "react-i18next"
-import { Chrome, Wallet } from "lucide-react"
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Chrome, Wallet } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
-import { useWallet } from "@/lib/wallet"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { useWallet } from "@/lib/wallet";
 
 interface AuthModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function AuthModal({ open, onOpenChange }: AuthModalProps) {
-  const { t } = useTranslation()
-  const { connected, account, publicKey, connect, disconnect, wallets } = useWallet()
-  const [email, setEmail] = useState("")
-  const showMock = import.meta.env.DEV && wallets.length === 0 && !connected
+const CONNECTORS = [
+  { id: "wallet-standard:phantom", label: "Phantom" },
+  { id: "wallet-standard:solflare", label: "Solflare" },
+  { id: "wallet-standard:backpack", label: "Backpack" },
+];
 
-  const handleConnect = async (name: string) => {
-    await connect(name)
-    onOpenChange(false)
-  }
+export function AuthModal({ open, onOpenChange }: AuthModalProps) {
+  const { t } = useTranslation();
+  const { status, address, isMock, connect, disconnect } = useWallet();
+  const [email, setEmail] = useState("");
+
+  const handleConnect = async (connectorId: string) => {
+    await connect(connectorId);
+    onOpenChange(false);
+  };
 
   const handleDisconnect = () => {
-    disconnect()
-    onOpenChange(false)
-  }
+    disconnect();
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -40,11 +45,16 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
           <DialogTitle>{t("auth.title")}</DialogTitle>
         </DialogHeader>
 
-        {connected ? (
+        {status === "connected" ? (
           <div className="flex flex-col gap-3 py-2">
             <div className="rounded-lg bg-muted p-3 text-sm">
               <div className="text-muted-foreground">Address</div>
-              <div className="mt-1 break-all font-medium">{account?.address ?? publicKey}</div>
+              <div className="mt-1 break-all font-medium">
+                {address}
+                {isMock && (
+                  <span className="ml-2 text-xs text-amber-500">(Mock)</span>
+                )}
+              </div>
             </div>
             <Button variant="outline" onClick={handleDisconnect}>
               {t("common.disconnect")}
@@ -81,34 +91,32 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              {wallets.map((wallet) => (
+              {CONNECTORS.map((connector) => (
                 <Button
-                  key={wallet.name}
+                  key={connector.id}
                   variant="outline"
                   className="h-auto justify-start gap-2 px-2 py-2"
-                  onClick={() => handleConnect(wallet.name)}
+                  onClick={() => void handleConnect(connector.id)}
                 >
-                  <img
-                    src={wallet.icon}
-                    alt={wallet.name}
-                    className="h-5 w-5 rounded"
-                  />
-                  <span className="text-xs font-medium">{wallet.name}</span>
+                  <div className="flex h-5 w-5 items-center justify-center rounded bg-muted text-[10px]">
+                    {connector.label[0]}
+                  </div>
+                  <span className="text-xs font-medium">{connector.label}</span>
                 </Button>
               ))}
-              {showMock && (
+              {import.meta.env.DEV && (
                 <Button
                   variant="secondary"
                   className="h-auto justify-start gap-2 px-2 py-2"
-                  onClick={() => handleConnect("__mock__")}
+                  onClick={() => void handleConnect("__mock__")}
                 >
                   <div className="flex h-5 w-5 items-center justify-center rounded bg-muted text-[10px]">
                     M
                   </div>
-                  <span className="text-xs font-medium">Mock Wallet</span>
+                  <span className="text-xs font-medium">Mock</span>
                 </Button>
               )}
-              {wallets.length === 0 && !showMock && (
+              {CONNECTORS.length === 0 && !import.meta.env.DEV && (
                 <div className="col-span-2 flex items-center gap-2 rounded-lg bg-muted p-3 text-xs text-muted-foreground"
                 >
                   <Wallet className="h-4 w-4" />
@@ -124,5 +132,5 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
         )}
       </DialogContent>
     </Dialog>
-  )
+  );
 }

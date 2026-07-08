@@ -13,6 +13,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PredictionsRouteImport } from './routes/predictions'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as InviteRouteImport } from './routes/invite'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MarketsEventIdRouteImport } from './routes/markets.$eventId'
@@ -37,6 +38,11 @@ const LeaderboardRoute = LeaderboardRouteImport.update({
   path: '/leaderboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InviteRoute = InviteRouteImport.update({
+  id: '/invite',
+  path: '/invite',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CreateRoute = CreateRouteImport.update({
   id: '/create',
   path: '/create',
@@ -56,6 +62,7 @@ const MarketsEventIdRoute = MarketsEventIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/create': typeof CreateRoute
+  '/invite': typeof InviteRoute
   '/leaderboard': typeof LeaderboardRoute
   '/notifications': typeof NotificationsRoute
   '/predictions': typeof PredictionsRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/create': typeof CreateRoute
+  '/invite': typeof InviteRoute
   '/leaderboard': typeof LeaderboardRoute
   '/notifications': typeof NotificationsRoute
   '/predictions': typeof PredictionsRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/create': typeof CreateRoute
+  '/invite': typeof InviteRoute
   '/leaderboard': typeof LeaderboardRoute
   '/notifications': typeof NotificationsRoute
   '/predictions': typeof PredictionsRoute
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/create'
+    | '/invite'
     | '/leaderboard'
     | '/notifications'
     | '/predictions'
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/create'
+    | '/invite'
     | '/leaderboard'
     | '/notifications'
     | '/predictions'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/create'
+    | '/invite'
     | '/leaderboard'
     | '/notifications'
     | '/predictions'
@@ -114,6 +126,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CreateRoute: typeof CreateRoute
+  InviteRoute: typeof InviteRoute
   LeaderboardRoute: typeof LeaderboardRoute
   NotificationsRoute: typeof NotificationsRoute
   PredictionsRoute: typeof PredictionsRoute
@@ -151,6 +164,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LeaderboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/invite': {
+      id: '/invite'
+      path: '/invite'
+      fullPath: '/invite'
+      preLoaderRoute: typeof InviteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/create': {
       id: '/create'
       path: '/create'
@@ -178,6 +198,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CreateRoute: CreateRoute,
+  InviteRoute: InviteRoute,
   LeaderboardRoute: LeaderboardRoute,
   NotificationsRoute: NotificationsRoute,
   PredictionsRoute: PredictionsRoute,

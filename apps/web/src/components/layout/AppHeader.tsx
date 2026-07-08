@@ -19,7 +19,7 @@ export function AppHeader({ className }: AppHeaderProps) {
   const navigate = useNavigate()
   const searchParams = useSearch({ from: "/" }) as { search?: string }
   const search = searchParams.search ?? ""
-  const { connected } = useWallet()
+  const { status } = useWallet()
 
   const handleSearch = (value: string) => {
     void navigate({
@@ -66,7 +66,7 @@ export function AppHeader({ className }: AppHeaderProps) {
           <Search className="h-5 w-5" />
         </Button>
 
-        {connected ? (
+        {status === "connected" ? (
           <>
             <div className="hidden items-center gap-3 text-xs sm:flex">
               <div className="flex flex-col items-end leading-tight">

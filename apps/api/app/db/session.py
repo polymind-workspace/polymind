@@ -5,13 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from app.core.config import settings
 from app.db.base import Base
 
-connect_args = {"check_same_thread": False} if settings.is_sqlite else {}
-
 engine = create_async_engine(
     settings.database_url,
     echo=settings.database_echo,
     future=True,
-    connect_args=connect_args,
 )
 
 AsyncSessionLocal = async_sessionmaker(
@@ -32,9 +29,9 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def init_db() -> None:
-    """Create all tables defined by SQLAlchemy models."""
+    """Create all tables defined by SQLAlchemy models.
+
+    Only used for tests or bootstrapping; production schema is managed by Alembic.
+    """
     async with engine.begin() as conn:
-        if settings.is_sqlite:
-            # Enable foreign key constraints for SQLite.
-            await conn.exec_driver_sql("PRAGMA foreign_keys=ON")
         await conn.run_sync(Base.metadata.create_all)
