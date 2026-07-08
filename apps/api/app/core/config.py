@@ -19,21 +19,21 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 8300
 
-    # Default to an in-memory SQLite DB for zero-config local development.
-    # Override with a PostgreSQL URL in production:
-    #   postgresql+asyncpg://user:pass@localhost:5432/polymind
-    database_url: str = "sqlite+aiosqlite:///./polymind_dev.db"
+    # PostgreSQL is the default and only supported database.
+    # Use the Docker Compose service (db) on port 5433.
+    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5433/polymind"
     database_echo: bool = False
 
     cors_origins: str = "http://localhost:3100,http://127.0.0.1:3100"
 
+    # Solana
+    solana_cluster: str = "devnet"
+    solana_rpc_url: str = "https://api.devnet.solana.com"
+    solana_program_id: str = ""
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
-
-    @property
-    def is_sqlite(self) -> bool:
-        return self.database_url.startswith("sqlite")
 
 
 settings = Settings()
