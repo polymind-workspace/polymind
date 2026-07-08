@@ -1,13 +1,20 @@
 """PolyMind API."""
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 # Import models so Base.metadata knows about them.
 import app.models  # noqa: F401
 from app.core.config import settings
+from app.core.exceptions import APIError
+from app.core.logging import configure_logging
+from app.core.response import fail
 from app.lifespan import lifespan
+from app.middleware.logging import RequestLoggingMiddleware
 from app.routers import api_router
+
+configure_logging("DEBUG" if settings.debug else "INFO")
 
 app = FastAPI(
     title=settings.app_name,
@@ -16,13 +23,43 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Request logging must run before CORS so the response header is attached before
+# CORS middleware finalizes the response.
+app.add_middleware(RequestLoggingMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Request-ID"],
 )
+
+
+@app.exception_handler(APIError)
+async def api_exception_handler(request: Request, exc: APIError) -> JSONResponse:
+    """Return business exceptions in the unified envelope format."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=fail(exc.ret, exc.msg),
+        headers={"X-Request-ID": getattr(request.state, "request_id", "")},
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Catch-all for unexpected errors."""
+    import structlog
+
+    logger = structlog.get_logger()
+    logger.exception("unhandled_error", exc_info=exc)
+    return JSONResponse(
+        status_code=500,
+        content=fail(500, "internal server error"),
+        headers={"X-Request-ID": getattr(request.state, "request_id", "")},
+    )
+
 
 app.include_router(api_router)
 
