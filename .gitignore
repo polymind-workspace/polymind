@@ -259,6 +259,13 @@ apps/api/data/outputs/*
 !apps/api/data/uploads/.gitkeep
 !apps/api/data/outputs/.gitkeep
 
+# Solana / Anchor
+.anchor/
+solana/**/node_modules/
+solana/**/yarn.lock
+solana/**/package-lock.json
+solana/**/test-ledger/
+
 # User assets (uploads + rendered outputs; user-scoped under assets/)
 assets/*
 !assets/.gitkeep
