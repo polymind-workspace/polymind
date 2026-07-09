@@ -52,15 +52,17 @@ async def create_admin_account(
     return success(data=data)
 
 
-@router.patch("/{account_id}", dependencies=[Depends(require_permission("admin_accounts:update"))])
+@router.patch("/{account_id}")
 async def update_admin_account(
     account_id: int,
     body: AdminAccountUpdateRequest,
+    account=Depends(require_permission("admin_accounts:update")),
     svc: AdminAccountService = Depends(get_admin_account_service),
 ):
     data = await svc.update_account(
         account_id,
         body.model_dump(exclude_unset=True),
+        updated_by=account.address,
     )
     return success(data=data)
 

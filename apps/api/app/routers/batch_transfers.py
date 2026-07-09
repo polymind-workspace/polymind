@@ -47,7 +47,7 @@ async def list_batch_transfers(
     return success(data=data)
 
 
-@router.post("")
+@router.post("", dependencies=[Depends(require_permission("batch_transfers:create"))])
 async def create_batch_transfer(
     body: BatchTransferCreateRequest,
     user: User = Depends(get_current_user),

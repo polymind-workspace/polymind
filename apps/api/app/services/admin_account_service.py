@@ -6,7 +6,7 @@ from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import BadRequestError, NotFoundError
+from app.core.exceptions import BadRequestError, ForbiddenError, NotFoundError
 from app.db.session import get_db
 from app.models import AdminAccount
 
@@ -52,6 +52,7 @@ class AdminAccountService:
         self,
         account_id: int,
         updates: dict,
+        updated_by: str | None = None,
     ) -> dict:
         account = await self._get_account_by_id(account_id)
         if not account:
@@ -59,12 +60,56 @@ class AdminAccountService:
 
         allowed = {"nickname", "label", "permissions"}
         for key, value in updates.items():
-            if key in allowed:
-                setattr(account, key, value)
+            if key not in allowed:
+                continue
+
+            if key == "permissions":
+                new_perms = set(value or [])
+                old_perms = set(account.permissions or [])
+
+                # Only super admins can change permissions.
+                if updated_by is not None:
+                    updater = await self._get_account_by_address(updated_by)
+                    updater_perms = set(updater.permissions or []) if updater else set()
+                    if "*" not in updater_perms:
+                        raise ForbiddenError(
+                            "only super admins can modify permissions"
+                        )
+
+                # Prevent granting * to self-escalation if updater lacks *.
+                if "*" in new_perms and "*" not in old_perms:
+                    if updated_by is not None:
+                        updater = await self._get_account_by_address(updated_by)
+                        updater_perms = set(updater.permissions or []) if updater else set()
+                        if "*" not in updater_perms:
+                            raise ForbiddenError(
+                                "only super admins can grant * permission"
+                            )
+
+                # Protect the last super admin from losing *.
+                if "*" in old_perms and "*" not in new_perms:
+                    other_super = await self.session.execute(
+                        select(AdminAccount).where(
+                            AdminAccount.id != account_id,
+                            AdminAccount.permissions.contains("*"),
+                        )
+                    )
+                    if other_super.scalar_one_or_none() is None:
+                        raise ForbiddenError(
+                            "cannot remove * from the last super admin"
+                        )
+
+            setattr(account, key, value)
 
         await self.session.commit()
         await self.session.refresh(account)
         return self._serialize_account(account)
+
+    async def _get_account_by_address(self, address: str) -> AdminAccount | None:
+        result = await self.session.execute(
+            select(AdminAccount).where(AdminAccount.address == address)
+        )
+        return result.scalar_one_or_none()
 
     async def delete_account(self, account_id: int) -> None:
         account = await self._get_account_by_id(account_id)

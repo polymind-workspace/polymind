@@ -25,12 +25,14 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5433/polymind"
     database_echo: bool = False
 
-    cors_origins: str = "http://localhost:3100,http://127.0.0.1:3100"
+    cors_origins: str = "http://localhost:3100,http://127.0.0.1:3100,http://localhost:3200,http://127.0.0.1:3200"
 
     # Solana
     solana_cluster: str = "devnet"
     solana_rpc_url: str = "https://api.devnet.solana.com"
     solana_program_id: str = ""
+    solana_champion_program_id: str = ""
+    solana_treasury_key: str = ""
 
     # Auth
     jwt_secret: str = ""

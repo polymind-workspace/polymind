@@ -82,6 +82,22 @@ uv run ruff check app
 uv run mypy app
 ```
 
+## Workers（后台定时任务）
+
+链上事件监听和定时任务由 `app/workers/` 下的 Python worker 承担。
+
+| Worker | 作用 | 启动命令 |
+|---|---|---|
+| `app.workers.indexer` | PolyMind 主程序事件索引（EventCreated/Bet/OutcomeProposed/Finalized/Claimed/Dispute 等） | `uv run python -m app.workers.indexer` |
+| `app.workers.champion_indexer` | Champion/H5 活动事件索引 | `uv run python -m app.workers.champion_indexer` |
+| `app.workers.notification_worker` | 把链上事件转成 `notifications` 表记录 | `uv run python -m app.workers.notification_worker` |
+| `app.workers.deadline_cron` | 时间触发提醒（deadline 到达、propose 窗口过期、review 窗口过期等） | `uv run python -m app.workers.deadline_cron` |
+| `app.workers.referral_reward_worker` | 结算推荐奖励，写入 `referral_rewards` | `uv run python -m app.workers.referral_reward_worker` |
+
+开发时可以在多个终端分别启动；也可以用项目根目录的 `dev.sh` 一键启动 API 和所有 worker。
+
+生产环境建议用 systemd / supervisor / docker compose 托管。
+
 ## 健康检查
 
 - `GET /health`

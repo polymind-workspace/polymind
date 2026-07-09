@@ -19,9 +19,9 @@ async def sync_transaction(
 ):
     """Confirm a Solana transaction by signature.
 
-    The Rust indexer is the source of truth for event parsing; this endpoint
-    only does a lightweight RPC confirmation so the frontend knows whether to
-    poll the API for indexed data.
+    The Python indexer (`app.workers.indexer`) is the source of truth for event
+    parsing; this endpoint only does a lightweight RPC confirmation so the
+    frontend knows whether to poll the API for indexed data.
     """
     try:
         result = await client.confirm_transaction(body.signature)

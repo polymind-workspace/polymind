@@ -1,6 +1,9 @@
 from app.models.activity import Activity
 from app.models.admin_account import AdminAccount
+from app.models.admin_audit_log import AdminAuditLog
+from app.models.admin_event_admin import AdminEventAdmin
 from app.models.batch_transfer import BatchTransfer
+from app.models.campaign_meta import CampaignMeta
 from app.models.chain_event_log import ChainEventLog
 from app.models.chat_message import ChatMessage
 from app.models.config import Config
@@ -11,6 +14,7 @@ from app.models.event import Event
 from app.models.event_category import EventCategory
 from app.models.event_tag import EventTag
 from app.models.indexer_cursor import IndexerCursor
+from app.models.invite import ClaimRequest, InviteBalance, InviteReward
 from app.models.login_nonce import LoginNonce
 from app.models.market import Market
 from app.models.media_image import MediaImage
@@ -27,7 +31,10 @@ from app.models.user import User
 __all__ = [
     "Activity",
     "AdminAccount",
+    "AdminAuditLog",
+    "AdminEventAdmin",
     "BatchTransfer",
+    "CampaignMeta",
     "ChainEventLog",
     "ChatMessage",
     "Config",
@@ -38,6 +45,9 @@ __all__ = [
     "EventCategory",
     "EventTag",
     "IndexerCursor",
+    "InviteBalance",
+    "InviteReward",
+    "ClaimRequest",
     "LoginNonce",
     "Market",
     "MediaImage",

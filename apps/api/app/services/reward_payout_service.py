@@ -8,6 +8,7 @@ from fastapi import Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.exceptions import BadRequestError, NotFoundError
 from app.db.session import get_db
 from app.models import RewardPayout
@@ -80,17 +81,63 @@ class RewardPayoutService:
         if payout.status not in ("pending", "failed"):
             raise BadRequestError(f"cannot execute payout in status {payout.status}")
 
-        # Phase 4 MVP: simulate chain execution. Real implementation will call
-        # the Solana program and confirm the transaction signature.
         payout.status = "running"
         await self.session.commit()
 
+        try:
+            tx_signature = await self._send_or_verify_payout(payout, signature)
+        except Exception as exc:
+            payout.status = "failed"
+            payout.error = str(exc)
+            await self.session.commit()
+            raise BadRequestError(f"payout failed: {exc}") from exc
+
         payout.status = "completed"
-        payout.tx_signature = signature or "simulated_tx_signature"
+        payout.tx_signature = tx_signature
         payout.executed_at = datetime.now(UTC)
         await self.session.commit()
         await self.session.refresh(payout)
         return payout.to_dict()
+
+    async def _send_or_verify_payout(
+        self, payout: RewardPayout, signature: str | None
+    ) -> str:
+        """Either verify a frontend-signed tx or send one from the treasury."""
+        from solders.keypair import Keypair
+
+        from app.clients.solana import SolanaClient
+
+        client = SolanaClient()
+        try:
+            if signature:
+                confirmed = await client.confirm_transaction(signature)
+                if not confirmed.get("confirmed"):
+                    raise RuntimeError(
+                        f"signature not confirmed: {confirmed.get('err')}"
+                    )
+                ok = await client.verify_native_transfer(
+                    signature,
+                    recipient_address=payout.user_address,
+                    amount_lamports=payout.amount,
+                )
+                if not ok:
+                    raise RuntimeError(
+                        "signature does not match expected recipient/amount"
+                    )
+                return signature
+
+            if not settings.solana_treasury_key:
+                raise RuntimeError("SOLANA_TREASURY_KEY is not configured")
+
+            keypair = Keypair.from_base58_string(settings.solana_treasury_key)
+            tx_signature = await client.send_native_transfer(
+                sender_keypair=keypair,
+                recipient_address=payout.user_address,
+                amount_lamports=payout.amount,
+            )
+            return tx_signature
+        finally:
+            await client.close()
 
     async def fail_payout(self, payout_id: int, error: str) -> dict:
         payout = await self._get_payout_by_id(payout_id)

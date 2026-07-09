@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
@@ -14,6 +16,7 @@ from app.dependencies.auth import (
 )
 from app.models import User
 from app.services.market_service import MarketService, get_market_service
+from app.utils.csv import csv_response
 
 router = APIRouter(prefix="/api/v1/markets", tags=["markets"])
 
@@ -36,10 +39,6 @@ class MarketUpdateRequest(BaseModel):
     title: str | None = Field(None, max_length=512)
     label_yes: str | None = Field(None, max_length=128)
     label_no: str | None = Field(None, max_length=128)
-    status: str | None = Field(
-        None,
-        pattern="^(open|awaiting_proposal|proposed|disputed|finalized|void)$",
-    )
     is_flagged: bool | None = None
     can_bet: bool | None = None
     deadline: str | None = None
@@ -56,6 +55,7 @@ async def list_markets(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=24, ge=1, le=100),
     admin_view: bool = Query(default=False),
+    download: int = Query(default=0, ge=0, le=1),
     admin_account=Depends(get_admin_account_optional),
     svc: MarketService = Depends(get_market_service),
 ):
@@ -65,6 +65,42 @@ async def list_markets(
         perms = set(admin_account.permissions or [])
         if "*" not in perms and "markets:list" not in perms:
             raise ForbiddenError("Missing permission: markets:list")
+
+    if download:
+        if admin_account is None:
+            raise UnauthorizedError("Admin required")
+        data = await svc.list_markets(
+            category=category,
+            tag=tag,
+            search=search,
+            status=status,
+            source=source,
+            sort=sort,
+            page=1,
+            limit=500,
+            is_admin=True,
+        )
+        rows = data.get("items", [])
+        return csv_response(
+            rows,
+            [
+                ("ID", "id"),
+                ("Slug", "slug"),
+                ("Title", "title"),
+                ("Description", "description"),
+                ("Category", "category"),
+                ("Status", "status"),
+                ("Stage", "stage"),
+                ("Source", "source"),
+                ("Yes Pool", "yesPool"),
+                ("No Pool", "noPool"),
+                ("Volume", "volume"),
+                ("Players", "players"),
+                ("End Time", "endTime"),
+                ("Resolved Outcome", "resolvedOutcome"),
+            ],
+            f"markets_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}.csv",
+        )
 
     data = await svc.list_markets(
         category=category,

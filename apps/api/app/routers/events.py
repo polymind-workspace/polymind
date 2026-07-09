@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
@@ -14,6 +16,7 @@ from app.dependencies.auth import (
 )
 from app.models import User
 from app.services.event_service import get_event_service
+from app.utils.csv import csv_response
 
 router = APIRouter(prefix="/api/v1/events", tags=["events"])
 
@@ -57,6 +60,7 @@ async def list_events(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=24, ge=1, le=100),
     admin_view: bool = Query(default=False),
+    download: int = Query(default=0, ge=0, le=1),
     admin_account=Depends(get_admin_account_optional),
     svc=Depends(get_event_service),
 ):
@@ -66,6 +70,42 @@ async def list_events(
         perms = set(admin_account.permissions or [])
         if "*" not in perms and "events:list" not in perms:
             raise ForbiddenError("Missing permission: events:list")
+
+    if download:
+        if admin_account is None:
+            raise UnauthorizedError("Admin required")
+        data = await svc.list_events(
+            category=category,
+            tag=tag,
+            source=source,
+            status=status,
+            search=search,
+            sort=sort,
+            page=1,
+            limit=500,
+            is_admin=True,
+        )
+        rows = data.get("items", [])
+        return csv_response(
+            rows,
+            [
+                ("ID", "id"),
+                ("Slug", "slug"),
+                ("Title", "title"),
+                ("Source", "source"),
+                ("Status", "status"),
+                ("Trending", "is_trending"),
+                ("Flagged", "is_flagged"),
+                ("Can Share", "can_share"),
+                ("Can Bet", "can_bet"),
+                ("Pinned", "pinned"),
+                ("Volume", "volume"),
+                ("Players", "players_count"),
+                ("Deadline", "deadline"),
+                ("Created At", "created_at"),
+            ],
+            f"events_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}.csv",
+        )
 
     data = await svc.list_events(
         category=category,

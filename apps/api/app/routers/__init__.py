@@ -2,18 +2,24 @@ from fastapi import APIRouter
 
 from app.routers import (
     activities,
+    admin,
     admin_accounts,
+    admin_events,
     auth,
     batch_transfers,
+    campaigns,
     chat,
     configs,
     dashboard,
     disputes,
     events,
+    invite,
     leaderboard,
     markets,
     media,
+    meta,
     notifications,
+    operators,
     polymarket,
     positions,
     predictions,
@@ -33,11 +39,17 @@ api_router = APIRouter()
 api_router.include_router(auth.router)
 api_router.include_router(users.router)
 api_router.include_router(admin_accounts.router)
+api_router.include_router(admin.router)
+api_router.include_router(meta.router)
+api_router.include_router(operators.router)
+api_router.include_router(configs.public_config_router)
 api_router.include_router(configs.router)
 api_router.include_router(tags.router)
 api_router.include_router(events.router)
+api_router.include_router(admin_events.router)
 api_router.include_router(sync.router)
 api_router.include_router(solana_events.router)
+api_router.include_router(campaigns.router)
 api_router.include_router(markets.router)
 api_router.include_router(positions.router)
 api_router.include_router(trades.router)
@@ -56,3 +68,4 @@ api_router.include_router(predictions.router)
 api_router.include_router(notifications.router)
 api_router.include_router(profile.router)
 api_router.include_router(referrals.router)
+api_router.include_router(invite.router)

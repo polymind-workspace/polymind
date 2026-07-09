@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
 from app.core.response import success
-from app.dependencies.auth import require_permission
+from app.dependencies.auth import get_admin_account_optional, require_permission
 from app.services.activity_service import ActivityService, get_activity_service
+from app.utils.csv import csv_response
 
 router = APIRouter(prefix="/api/v1/activities", tags=["activities"])
 
@@ -40,9 +41,36 @@ class ActivityUpdateRequest(BaseModel):
 
 @router.get("")
 async def list_activities(
+    download: int = Query(default=0, ge=0, le=1),
+    admin_account=Depends(get_admin_account_optional),
     svc: ActivityService = Depends(get_activity_service),
 ):
-    data = await svc.list_activities(active_only=True)
+    data = await svc.list_activities(active_only=False)
+    if download:
+        if admin_account is None:
+            from app.core.exceptions import UnauthorizedError
+            raise UnauthorizedError("Admin required")
+        perms = set(admin_account.permissions or [])
+        if "*" not in perms and "activities:list" not in perms:
+            from app.core.exceptions import ForbiddenError
+            raise ForbiddenError("Missing permission: activities:list")
+        return csv_response(
+            data,
+            [
+                ("ID", "id"),
+                ("Title", "title"),
+                ("Subtitle", "subtitle"),
+                ("Image URL", "image_url"),
+                ("Action URL", "action_url"),
+                ("Tags", "tags"),
+                ("Sort Order", "sort_order"),
+                ("Active", "is_active"),
+                ("Start At", "start_at"),
+                ("End At", "end_at"),
+                ("Created At", "created_at"),
+            ],
+            f"activities_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}.csv",
+        )
     return success(data=data)
 
 
@@ -52,6 +80,15 @@ async def create_activity(
     svc: ActivityService = Depends(get_activity_service),
 ):
     data = await svc.create_activity(body.model_dump())
+    return success(data=data)
+
+
+@router.get("/{activity_id}")
+async def get_activity(
+    activity_id: int,
+    svc: ActivityService = Depends(get_activity_service),
+):
+    data = await svc.get_activity(activity_id)
     return success(data=data)
 
 

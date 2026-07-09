@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from fastapi import Depends
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import BadRequestError, NotFoundError
 from app.db.session import get_db
-from app.models import Tag
+from app.models import Event, EventTag, Tag
 
 
 class TagService:
@@ -73,6 +73,96 @@ class TagService:
     async def _get_tag_by_slug(self, slug: str) -> Tag | None:
         result = await self.session.execute(select(Tag).where(Tag.slug == slug))
         return result.scalar_one_or_none()
+
+    async def bulk_attach_events(self, tag_slug: str, event_slugs: list[str]) -> dict:
+        """Attach a tag to multiple events."""
+        tag = await self._get_tag_by_slug(tag_slug)
+        if not tag:
+            raise NotFoundError("tag not found")
+
+        result = await self.session.execute(
+            select(Event.id, Event.slug).where(Event.slug.in_(event_slugs))
+        )
+        event_rows = result.all()
+        event_map = {row.slug: row.id for row in event_rows}
+
+        unknown = [slug for slug in event_slugs if slug not in event_map]
+
+        existing_result = await self.session.execute(
+            select(EventTag.event_id).where(
+                EventTag.tag_id == tag.id,
+                EventTag.event_id.in_(list(event_map.values())),
+            )
+        )
+        existing_event_ids = set(existing_result.scalars().all())
+
+        skipped = [
+            slug for slug, event_id in event_map.items() if event_id in existing_event_ids
+        ]
+        to_attach = [
+            event_id
+            for slug, event_id in event_map.items()
+            if event_id not in existing_event_ids
+        ]
+
+        for event_id in to_attach:
+            self.session.add(EventTag(event_id=event_id, tag_id=tag.id))
+
+        await self.session.commit()
+
+        return {
+            "changed": [
+                slug for slug, event_id in event_map.items() if event_id in to_attach
+            ],
+            "skipped_existing": skipped,
+            "unknown_slugs": unknown,
+        }
+
+    async def bulk_detach_events(self, tag_slug: str, event_slugs: list[str]) -> dict:
+        """Detach a tag from multiple events."""
+        tag = await self._get_tag_by_slug(tag_slug)
+        if not tag:
+            raise NotFoundError("tag not found")
+
+        result = await self.session.execute(
+            select(Event.id, Event.slug).where(Event.slug.in_(event_slugs))
+        )
+        event_rows = result.all()
+        event_map = {row.slug: row.id for row in event_rows}
+
+        unknown = [slug for slug in event_slugs if slug not in event_map]
+
+        attached_result = await self.session.execute(
+            select(EventTag.event_id).where(
+                EventTag.tag_id == tag.id,
+                EventTag.event_id.in_(list(event_map.values())),
+            )
+        )
+        attached_event_ids = set(attached_result.scalars().all())
+
+        to_detach = {
+            event_id
+            for slug, event_id in event_map.items()
+            if event_id in attached_event_ids
+        }
+
+        if to_detach:
+            await self.session.execute(
+                delete(EventTag).where(
+                    EventTag.tag_id == tag.id,
+                    EventTag.event_id.in_(list(to_detach)),
+                )
+            )
+            await self.session.commit()
+
+        return {
+            "changed": [
+                slug
+                for slug, event_id in event_map.items()
+                if event_id in to_detach
+            ],
+            "unknown_slugs": unknown,
+        }
 
     def _serialize_tag(self, tag: Tag) -> dict:
         return {

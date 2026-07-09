@@ -17,6 +17,23 @@ class PolymarketClient:
         self.gamma = httpx.AsyncClient(base_url=GAMMA_API_BASE, timeout=20.0)
         self.clob = httpx.AsyncClient(base_url=CLOB_API_BASE, timeout=20.0)
 
+    async def list_categories(self) -> list[dict[str, Any]]:
+        """Return a static list of Polymarket categories for the MVP.
+
+        Polymarket does not expose a stable public category endpoint, so we
+        return the most common categories used by the import UI.
+        """
+        return [
+            {"slug": "politics", "name": "Politics"},
+            {"slug": "crypto", "name": "Crypto"},
+            {"slug": "sports", "name": "Sports"},
+            {"slug": "entertainment", "name": "Entertainment"},
+            {"slug": "business", "name": "Business"},
+            {"slug": "science", "name": "Science"},
+            {"slug": "technology", "name": "Technology"},
+            {"slug": "world", "name": "World"},
+        ]
+
     async def list_events(
         self,
         *,

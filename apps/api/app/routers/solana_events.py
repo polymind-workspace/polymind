@@ -16,7 +16,7 @@ async def list_solana_events(
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
 ):
-    """List chain events indexed by the Rust indexer."""
+    """List chain events indexed by the Python worker."""
     stmt = select(ChainEventLog).order_by(desc(ChainEventLog.slot))
     if kind:
         stmt = stmt.where(ChainEventLog.kind == kind)

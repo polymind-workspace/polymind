@@ -10,6 +10,14 @@ from app.core.response import success
 router = APIRouter(prefix="/api/v1/polymarket", tags=["polymarket"])
 
 
+@router.get("/categories")
+async def list_polymarket_categories(
+    client: PolymarketClient = Depends(get_polymarket_client),
+):
+    data = await client.list_categories()
+    return success(data=data)
+
+
 @router.get("/events")
 async def list_polymarket_events(
     category: str | None = Query(default=None),

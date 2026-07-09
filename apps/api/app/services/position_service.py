@@ -7,9 +7,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from app.core.exceptions import BadRequestError, NotFoundError
+from app.core.exceptions import BadRequestError, ForbiddenError, NotFoundError
 from app.db.session import get_db
 from app.models import Market, Position
+from app.services.chain_parser import verify_claim
 from app.utils.token import format_token_amount
 
 
@@ -71,8 +72,23 @@ class PositionService:
         if market.status not in ("finalized", "void"):
             raise BadRequestError("market is not finalized")
 
-        # Phase 1: confirm the claim transaction signature. The indexer will
-        # update the position row with claimed_amount and payout_amount.
+        parsed = await verify_claim(signature, expected_claimer=user_address)
+
+        claimed_event = next(
+            (ev for ev in parsed.polymind_events if ev.type.value == "Claimed"), None
+        )
+        if claimed_event is not None:
+            from app.services.chain_parser import ClaimedPayload
+
+            payload = claimed_event.payload
+            if isinstance(payload, ClaimedPayload):
+                if payload.user != user_address:
+                    raise ForbiddenError("signature claimer does not match user")
+                if payload.event_id != int(market.event.onchain_event_id or 0):
+                    raise ForbiddenError("signature event does not match market")
+                if payload.market_idx != market.market_idx:
+                    raise ForbiddenError("signature market index does not match")
+
         from app.clients.solana import SolanaClient
 
         client = SolanaClient()
@@ -89,10 +105,11 @@ class PositionService:
     async def _get_market_and_position(
         self, market_slug: str, user_address: str
     ) -> tuple[Market, Position | None]:
+
         market_result = await self.session.execute(
-            select(Market).where(Market.slug == market_slug)
+            select(Market).options(joinedload(Market.event)).where(Market.slug == market_slug)
         )
-        market = market_result.scalar_one_or_none()
+        market = market_result.unique().scalar_one_or_none()
         if not market:
             raise NotFoundError("market not found")
 

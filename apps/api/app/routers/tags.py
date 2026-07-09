@@ -27,6 +27,10 @@ class TagUpdateRequest(BaseModel):
     is_pinned: bool | None = None
 
 
+class BulkTagEventsRequest(BaseModel):
+    event_slugs: list[str] = Field(..., min_length=1)
+
+
 @router.get("")
 async def list_tags(
     svc: TagService = Depends(get_tag_service),
@@ -68,3 +72,23 @@ async def delete_tag(
 ):
     await svc.delete_tag(slug)
     return success()
+
+
+@router.post("/{slug}/attach", dependencies=[Depends(require_permission("tags:update"))])
+async def bulk_attach_tag(
+    slug: str,
+    body: BulkTagEventsRequest,
+    svc: TagService = Depends(get_tag_service),
+):
+    data = await svc.bulk_attach_events(slug, body.event_slugs)
+    return success(data=data)
+
+
+@router.post("/{slug}/detach", dependencies=[Depends(require_permission("tags:update"))])
+async def bulk_detach_tag(
+    slug: str,
+    body: BulkTagEventsRequest,
+    svc: TagService = Depends(get_tag_service),
+):
+    data = await svc.bulk_detach_events(slug, body.event_slugs)
+    return success(data=data)

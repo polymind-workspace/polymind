@@ -34,19 +34,70 @@ DEFAULT_CATEGORIES = [
 ]
 
 DEFAULT_CONFIGS = {
-    "platform_fee_bps": {"value": 300, "memo": "Platform fee in basis points (3%)"},
-    "platform_fee_max": {"value": 10_000_000, "memo": "Platform fee cap in micro-USDC (10 USDC)"},
-    "creator_reward_bps": {"value": 500, "memo": "Creator reward in basis points (5%)"},
-    "creator_reward_max": {"value": 5_000_000, "memo": "Creator reward cap in micro-USDC (5 USDC)"},
-    "creator_propose_timeout_seconds": {"value": 259_200, "memo": "3 days"},
-    "dispute_window_seconds": {"value": 86_400, "memo": "1 day"},
-    "admin_timeout_seconds": {"value": 604_800, "memo": "7 days"},
-    "min_bet_micro_usdc": {"value": 1_000_000, "memo": "Minimum bet in micro-USDC (1 USDC)"},
-    "dispute_bond_micro_usdc": {"value": 1_000_000, "memo": "Dispute bond in micro-USDC (1 USDC)"},
-    "referral_reward_bps": {"value": 100, "memo": "Referral reward in basis points (1%)"},
+    "platform_fee_bps": {
+        "value": 300,
+        "memo": "Platform fee in basis points (3%)",
+        "is_public": True,
+    },
+    "platform_fee_max": {
+        "value": 10_000_000,
+        "memo": "Platform fee cap in micro-USDC (10 USDC)",
+        "is_public": True,
+    },
+    "creator_reward_bps": {
+        "value": 500,
+        "memo": "Creator reward in basis points (5%)",
+        "is_public": True,
+    },
+    "creator_reward_max": {
+        "value": 5_000_000,
+        "memo": "Creator reward cap in micro-USDC (5 USDC)",
+        "is_public": True,
+    },
+    "creator_propose_timeout_seconds": {
+        "value": 259_200,
+        "memo": "3 days",
+        "is_public": True,
+    },
+    "dispute_window_seconds": {
+        "value": 86_400,
+        "memo": "1 day",
+        "is_public": True,
+    },
+    "admin_timeout_seconds": {
+        "value": 604_800,
+        "memo": "7 days",
+        "is_public": True,
+    },
+    "min_bet_micro_usdc": {
+        "value": 1_000_000,
+        "memo": "Minimum bet in micro-USDC (1 USDC)",
+        "is_public": True,
+    },
+    "dispute_bond_micro_usdc": {
+        "value": 1_000_000,
+        "memo": "Dispute bond in micro-USDC (1 USDC)",
+        "is_public": True,
+    },
+    "referral_reward_bps": {
+        "value": 100,
+        "memo": "Referral reward in basis points (1%)",
+        "is_public": True,
+    },
     "referral_reward_max": {
         "value": 1_000_000,
         "memo": "Referral reward cap in micro-USDC (1 USDC)",
+        "is_public": True,
+    },
+    "expired_propose_mode": {
+        "value": 0,
+        "memo": "0 = participant takeover, 1 = slash",
+        "is_public": True,
+    },
+    "single_side_only": {
+        "value": False,
+        "memo": "If true, only one side can be bet on",
+        "is_public": True,
     },
 }
 
@@ -65,7 +116,14 @@ async def seed_configs(session: AsyncSession) -> None:
     for key, cfg in DEFAULT_CONFIGS.items():
         existing = await session.execute(select(Config).where(Config.key == key))
         if existing.scalar_one_or_none() is None:
-            session.add(Config(key=key, value=cfg["value"], memo=cfg["memo"]))
+            session.add(
+                Config(
+                    key=key,
+                    value=cfg["value"],
+                    memo=cfg["memo"],
+                    is_public=cfg.get("is_public", False),
+                )
+            )
     await session.commit()
 
 

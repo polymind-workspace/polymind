@@ -30,6 +30,7 @@ class Dispute(Base):
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(32), default="active", nullable=False, index=True)
     resolved_outcome: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    resolved_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     resolved_by: Mapped[str | None] = mapped_column(String(64), nullable=True)
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(

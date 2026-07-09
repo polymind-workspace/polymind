@@ -9,6 +9,7 @@ from sqlalchemy.orm import joinedload
 
 from app.db.session import get_db
 from app.models import Market, Trade
+from app.services.chain_parser import verify_trade
 from app.utils.token import format_token_amount
 
 
@@ -73,9 +74,11 @@ class TradeService:
     async def sync_trade(self, signature: str) -> dict:
         """Confirm a trade transaction has landed on-chain.
 
-        The Rust indexer is responsible for parsing the transaction and
-        inserting the Trade row. This endpoint only confirms the signature.
+        Verifies the transaction contains a PolyMind bet instruction before
+        confirming.
         """
+        await verify_trade(signature)
+
         from app.clients.solana import SolanaClient
 
         client = SolanaClient()

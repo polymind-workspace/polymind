@@ -3,9 +3,14 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
-from app.core.exceptions import NotFoundError
+from app.core.exceptions import ForbiddenError, NotFoundError
 from app.db.session import get_db
 from app.models import Event, EventCategory, Tag
+from app.services.chain_parser import (
+    PolyMindInstruction,
+    fetch_and_parse_transaction,
+    verify_creator_action,
+)
 from app.utils.slugify import unique_event_slug
 
 
@@ -134,8 +139,26 @@ class EventService:
         return self._serialize_event(event, detail=True)
 
     async def sync_event(self, signature: str, user_address: str) -> dict:
-        # Phase 1: only confirm the Solana transaction. The Rust indexer will
-        # parse the on-chain event and create/update the Event/Market rows.
+        """Confirm a create-event transaction and verify the creator signer."""
+        parsed = await fetch_and_parse_transaction(signature)
+        verify_creator_action(
+            parsed,
+            PolyMindInstruction.CREATE_EVENT,
+            creator_address=user_address,
+        )
+
+        event_created = next(
+            (ev for ev in parsed.polymind_events if ev.type.value == "EventCreated"),
+            None,
+        )
+        if event_created is not None:
+            from app.services.chain_parser import EventCreatedPayload
+
+            payload = event_created.payload
+            if isinstance(payload, EventCreatedPayload):
+                if payload.creator != user_address:
+                    raise ForbiddenError("signature creator does not match user")
+
         from app.clients.solana import SolanaClient
 
         client = SolanaClient()

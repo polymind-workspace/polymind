@@ -30,6 +30,12 @@ class ActivityService:
         result = await self.session.execute(stmt)
         return [a.to_dict() for a in result.scalars().all()]
 
+    async def get_activity(self, activity_id: int) -> dict:
+        activity = await self._get_activity_by_id(activity_id)
+        if not activity:
+            raise NotFoundError("activity not found")
+        return activity.to_dict()
+
     async def create_activity(self, data: dict) -> dict:
         activity = Activity(**data)
         self.session.add(activity)

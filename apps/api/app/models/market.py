@@ -3,7 +3,17 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    SmallInteger,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -48,6 +58,8 @@ class Market(Base):
     finalized_outcome: Mapped[str | None] = mapped_column(String(16), nullable=True)
     finalized_by: Mapped[str | None] = mapped_column(String(64), nullable=True)
     finalized_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finalization_path: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
+    admin_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     dispute_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     creator_seed_bet_amount: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
     creator_seed_bet_side: Mapped[str | None] = mapped_column(String(16), nullable=True)
@@ -61,6 +73,10 @@ class Market(Base):
     creator_reward_max: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
     dispute_window_secs: Mapped[int] = mapped_column(BigInteger, default=86_400, nullable=False)
     admin_timeout_secs: Mapped[int] = mapped_column(BigInteger, default=604_800, nullable=False)
+    expired_propose_mode: Mapped[int] = mapped_column(
+        SmallInteger, default=0, nullable=False
+    )
+    single_side_only: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     vault_address: Mapped[str | None] = mapped_column(String(64), nullable=True)
     creator_performed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     platform_rake: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
