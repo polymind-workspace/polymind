@@ -1,5 +1,6 @@
 """Solana RPC client."""
 
+import json
 from typing import Any
 
 from solana.rpc.async_api import AsyncClient
@@ -46,7 +47,7 @@ class SolanaClient:
         )
         if resp.value is None:
             return None
-        return resp.value.to_json()
+        return json.loads(resp.value.to_json())
 
     async def close(self) -> None:
         await self.client.close()

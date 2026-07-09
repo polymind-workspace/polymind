@@ -19,21 +19,13 @@ class User(Base):
     avatar: Mapped[str | None] = mapped_column(String(512), nullable=True)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     is_pro: Mapped[bool] = mapped_column(Boolean, default=False)
-    pro_expires_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    pro_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     invite_code: Mapped[str | None] = mapped_column(
         String(32), unique=True, nullable=True, index=True
     )
-    inviter_id: Mapped[int | None] = mapped_column(
-        Integer, nullable=True, index=True
-    )
-    inbox_seen_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=now_utc
-    )
+    inviter_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    inbox_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=now_utc, onupdate=now_utc
     )

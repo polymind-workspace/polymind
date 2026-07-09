@@ -23,6 +23,4 @@ class ChainEventLog(Base):
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
     )
 
-    __table_args__ = (
-        Index("ix_chain_event_log_signature_kind", "signature", "kind", unique=True),
-    )
+    __table_args__ = (Index("ix_chain_event_log_signature_kind", "signature", "kind", unique=True),)

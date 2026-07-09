@@ -2,6 +2,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.core.config import settings
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -11,4 +13,8 @@ async def lifespan(app: FastAPI):
         uv run alembic upgrade head
     before starting the server.
     """
+    settings.require_jwt_secrets()
     yield
+
+
+__all__ = ["lifespan"]
