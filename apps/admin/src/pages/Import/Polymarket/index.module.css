@@ -1,0 +1,16 @@
+.pmEventGrid :global(.ant-list-item) {
+  height: 100%;
+}
+
+.eventCard {
+  border-radius: 12px;
+  height: 280px;
+  overflow: hidden;
+}
+
+.eventCard :global(.ant-card-body) {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}

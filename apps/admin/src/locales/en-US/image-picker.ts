@@ -1,0 +1,17 @@
+export default {
+  'imagePicker.upload':         'Upload Image',
+  'imagePicker.uploadNew':      'Upload New Image',
+  'imagePicker.chooseLibrary':  'Choose from Library',
+  'imagePicker.libraryTitle':   'Image Library',
+  'imagePicker.empty':          'No images uploaded yet',
+  'imagePicker.uploaded':       'Image uploaded',
+  'imagePicker.uploadFailed':   'Upload failed',
+  'imagePicker.deleted':        'Image deleted',
+  'imagePicker.deleteFailed':   'Delete failed',
+  'imagePicker.deleteConfirm':  'Delete this image?',
+  'imagePicker.delete':         'Delete',
+  'imagePicker.cannotDelete':   'Cannot delete image',
+  'imagePicker.loadFailed':     'Failed to load image library',
+  'imagePicker.typeError':      'Only JPEG / PNG / GIF / WebP images are allowed',
+  'imagePicker.sizeError':      'File size exceeds 5 MB limit',
+};

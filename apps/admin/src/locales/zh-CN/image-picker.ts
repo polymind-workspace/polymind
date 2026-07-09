@@ -1,0 +1,17 @@
+export default {
+  'imagePicker.upload':         '上传图片',
+  'imagePicker.uploadNew':      '上传新图片',
+  'imagePicker.chooseLibrary':  '从图库选择',
+  'imagePicker.libraryTitle':   '图库',
+  'imagePicker.empty':          '暂无图片',
+  'imagePicker.uploaded':       '上传成功',
+  'imagePicker.uploadFailed':   '上传失败',
+  'imagePicker.deleted':        '已删除',
+  'imagePicker.deleteFailed':   '删除失败',
+  'imagePicker.deleteConfirm':  '删除这张图片？',
+  'imagePicker.delete':         '删除',
+  'imagePicker.cannotDelete':   '该图片正在使用中',
+  'imagePicker.loadFailed':     '加载图库失败',
+  'imagePicker.typeError':      '仅支持 JPEG / PNG / GIF / WebP',
+  'imagePicker.sizeError':      '文件大小超过 5 MB 限制',
+};

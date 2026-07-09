@@ -1,0 +1,47 @@
+export default {
+  'signer.label':    '当前钱包：',
+  'signer.switch':   '切换钱包',
+  'signer.checking': '权限校验中…',
+
+  'signer.admin.title':         '本次操作使用的钱包',
+  'signer.admin.ok':            '已授权（管理员）',
+  'signer.admin.notAllowed':    '未授权',
+  'signer.admin.notAllowedMsg': '当前钱包不是合约管理员。请点击「切换钱包」，换到下方任一已授权地址；或先到「管理员」页把当前地址加进去。',
+  'signer.admin.allowedList':   '可用的管理员地址：',
+  'signer.admin.allowedEmpty':  '还没有任何管理员，请先到「管理员」页面添加。',
+
+  'signer.creator.title':         '本次操作使用的钱包',
+  'signer.creator.ok':            '已授权（创建者）',
+  'signer.creator.notAllowed':    '未授权',
+  'signer.creator.notAllowedMsg': '当前钱包没有创建事件的权限。请点击「切换钱包」，换到下方任一已授权地址；或先到「创建者」页把当前地址加进去。',
+  'signer.creator.allowedList':   '可用的创建者地址：',
+  'signer.creator.allowedEmpty':  '还没有任何创建者，请先到「创建者」页面添加。',
+
+  'signer.distributor.title':         '本次操作使用的钱包',
+  'signer.distributor.ok':            '已授权（分发者）',
+  'signer.distributor.notAllowed':    '未授权',
+  'signer.distributor.notAllowedMsg': '当前钱包没有从合约提取平台资金的权限。请点击「切换钱包」，换到下方任一已授权地址；或先到「分发者」页把当前地址加进去。',
+  'signer.distributor.allowedList':   '可用的分发者地址：',
+  'signer.distributor.allowedEmpty':  '还没有任何分发者，请先到「分发者」页面添加。',
+
+  'signer.adminevent.title':         '本次操作使用的钱包',
+  'signer.adminevent.ok':            '已授权（Special Event）',
+  'signer.adminevent.notAllowed':    '未授权',
+  'signer.adminevent.notAllowedMsg': '当前钱包不是 Special Event 合约的管理员。请切换到下方已授权钱包，或前往 设置 → 操作员 → "AdminEvent Admins" 标签页添加当前钱包。',
+  'signer.adminevent.allowedList':   '已授权的 Special Event 管理员地址：',
+  'signer.adminevent.allowedEmpty':  '暂无 Special Event 管理员。请前往 设置 → 操作员 → "AdminEvent Admins" 标签页添加。',
+
+  'signer.champion.title':         '本次操作使用的钱包',
+  'signer.champion.ok':            '已授权（竞猜活动）',
+  'signer.champion.notAllowed':    '未授权',
+  'signer.champion.notAllowedMsg': '当前钱包不是 champion 合约的管理员，无法上链创建或结算。请切换到合约管理员钱包。',
+  'signer.champion.allowedList':   '已授权的 champion 管理员地址：',
+  'signer.champion.allowedEmpty':  '尚未获取到 champion 管理员（合约可能未部署或未配置地址）。',
+
+'signer.target.title':         '本次操作使用的钱包',
+  'signer.target.ok':            '已匹配',
+  'signer.target.notAllowed':    '未匹配',
+  'signer.target.notAllowedMsg': '当前钱包不是该事件的创建者。请点击「切换钱包」，换到下方地址。',
+  'signer.target.allowedList':   '事件创建者地址：',
+  'signer.target.allowedEmpty':  '',
+};

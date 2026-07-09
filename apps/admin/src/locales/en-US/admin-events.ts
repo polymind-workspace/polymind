@@ -1,0 +1,85 @@
+export default {
+  'adminEvents.create.section.event':   'Event',
+  'adminEvents.create.section.answers': 'Answers',
+
+  'adminEvents.create.label.question':      'Question',
+  'adminEvents.create.label.slug':          'Slug (optional — auto-generated if blank)',
+  'adminEvents.create.label.slugShort':     'Slug',
+  'adminEvents.create.label.bettingOpens':  'Betting opens',
+  'adminEvents.create.label.bettingCloses': 'Betting closes',
+  'adminEvents.create.label.minBet':        'Min bet (EDS)',
+  'adminEvents.create.label.minBetShort':   'Min bet',
+  'adminEvents.create.label.prize':         'Prize pool (EDS)',
+  'adminEvents.create.label.prizeShort':    'Prize pool',
+  'adminEvents.create.label.contract':      'Contract',
+  'adminEvents.create.label.h5url':         'H5 URL',
+  'adminEvents.create.label.txhash':        'TX hash',
+
+  'adminEvents.create.ph.question': 'Which team wins IPL 2026?',
+  'adminEvents.create.ph.slug':     'ipl-2026-winner',
+  'adminEvents.create.ph.datetime': 'Select date & time',
+  'adminEvents.create.ph.answer':   'Answer text',
+
+  'adminEvents.create.required':         'Required',
+  'adminEvents.create.question.required': 'Question is required',
+  'adminEvents.create.validate.startFuture':   'Start time must be in the future',
+  'adminEvents.create.validate.endAfterStart': 'End time must be after start time',
+  'adminEvents.create.validate.minAnswers':    'At least 2 answers are required',
+  'adminEvents.create.validate.duplicate':     'Duplicate answers: {list}',
+
+  'adminEvents.create.btn.review':    'Review & Create On-Chain',
+  'adminEvents.create.btn.addAnswer': 'Add answer',
+  'adminEvents.create.btn.viewAll':   'View all admin events',
+
+  'adminEvents.create.tip.connectWallet': 'Connect an authorized wallet first',
+  'adminEvents.create.toast.dbSyncFailed': 'On-chain succeeded but DB sync failed: {error}',
+  'adminEvents.create.tx.name': 'Create admin event',
+
+  'adminEvents.create.result.success': 'Event created successfully',
+
+  'adminEvents.create.confirm.title': 'Confirm event creation',
+  'adminEvents.create.confirm.ok':    'Create on-chain',
+  'adminEvents.create.confirm.depositNote':
+    'This will open your wallet to sign a transaction depositing {amount} as the prize pool.',
+
+  'adminEvents.list.status.open':     'Open',
+  'adminEvents.list.status.ended':    'Ended',
+  'adminEvents.list.status.resolved': 'Resolved',
+
+  'adminEvents.list.col.question':     'Question',
+  'adminEvents.list.col.answers':      'Answers',
+  'adminEvents.list.col.endTime':      'End time',
+  'adminEvents.list.col.participants': 'Participants',
+  'adminEvents.list.col.collected':    'Collected Bets',
+  'adminEvents.list.col.status':       'Status',
+  'adminEvents.list.col.h5':           'H5 page',
+  'adminEvents.list.col.h5open':       'Open',
+  'adminEvents.list.col.created':      'Created',
+  'adminEvents.list.col.action':       'Action',
+
+  'adminEvents.list.tag.free':              'Free event',
+  'adminEvents.list.tag.noBets':            'No bets yet',
+  'adminEvents.list.tag.pendingWithdrawal': 'Pending Withdrawal',
+  'adminEvents.list.tag.withdrawn':         'Withdrawn ✓',
+  'adminEvents.list.tag.participants':      '{count, plural, one {# participant} other {# participants}}',
+
+  'adminEvents.list.finalize.btn':           'Finalize',
+  'adminEvents.list.finalize.afterEnd':      'Available after event ends',
+  'adminEvents.list.finalize.modalTitle':    'Finalize: {question}',
+  'adminEvents.list.finalize.submit':        'Submit on-chain',
+  'adminEvents.list.finalize.answersLabel':  'Answers:',
+  'adminEvents.list.finalize.correctAnswer': 'Correct answer',
+  'adminEvents.list.finalize.txName':        'Finalize admin event',
+  'adminEvents.list.finalize.success':       'Event finalized — winner: {winner}',
+
+  'adminEvents.list.withdraw.btn':     'Withdraw',
+  'adminEvents.list.withdraw.loading': 'Loading balance…',
+  'adminEvents.list.withdraw.tooltip': 'Withdraw {amount}',
+  'adminEvents.list.withdraw.none':    'No collected bets to withdraw',
+  'adminEvents.list.withdraw.txName':  'Withdraw collected bets',
+  'adminEvents.list.withdraw.success': 'Withdrawn from {slug}',
+
+  'adminEvents.list.btn.newSpecial': 'New special event',
+  'adminEvents.list.totalEvents':    '{n, plural, one {# event} other {# events}}',
+  'adminEvents.list.empty':          'No admin events yet',
+};

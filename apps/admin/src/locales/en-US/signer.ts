@@ -1,0 +1,47 @@
+export default {
+  'signer.label':    'Current wallet:',
+  'signer.switch':   'Switch wallet',
+  'signer.checking': 'Checking…',
+
+  'signer.admin.title':         'Wallet for this action',
+  'signer.admin.ok':            'Authorized (Admin)',
+  'signer.admin.notAllowed':    'Not authorized',
+  'signer.admin.notAllowedMsg': 'This wallet is not a contract admin. Click "Switch wallet" and pick any of the authorized addresses below, or add this address on the Admins page first.',
+  'signer.admin.allowedList':   'Authorized admin addresses:',
+  'signer.admin.allowedEmpty':  'No admins yet — add one on the Admins page first.',
+
+  'signer.creator.title':         'Wallet for this action',
+  'signer.creator.ok':            'Authorized (Creator)',
+  'signer.creator.notAllowed':    'Not authorized',
+  'signer.creator.notAllowedMsg': 'This wallet does not have permission to create events. Click "Switch wallet" and pick any of the authorized addresses below, or add this address on the Creators page first.',
+  'signer.creator.allowedList':   'Authorized creator addresses:',
+  'signer.creator.allowedEmpty':  'No creators yet — add one on the Creators page first.',
+
+  'signer.distributor.title':         'Wallet for this action',
+  'signer.distributor.ok':            'Authorized (Distributor)',
+  'signer.distributor.notAllowed':    'Not authorized',
+  'signer.distributor.notAllowedMsg': 'This wallet does not have permission to withdraw platform funds. Click "Switch wallet" and pick any of the authorized addresses below, or add this address on the Distributors page first.',
+  'signer.distributor.allowedList':   'Authorized distributor addresses:',
+  'signer.distributor.allowedEmpty':  'No distributors yet — add one on the Distributors page first.',
+
+  'signer.adminevent.title':         'Wallet for this action',
+  'signer.adminevent.ok':            'Authorized (Special Event)',
+  'signer.adminevent.notAllowed':    'Not authorized',
+  'signer.adminevent.notAllowedMsg': 'This wallet is not a Special Event admin. Switch to an authorized wallet below, or go to Settings → Operators → "AdminEvent Admins" tab to add this wallet.',
+  'signer.adminevent.allowedList':   'Authorized Special Event admin addresses:',
+  'signer.adminevent.allowedEmpty':  'No Special Event admins yet. Go to Settings → Operators → "AdminEvent Admins" tab to add one.',
+
+  'signer.champion.title':         'Wallet used for this action',
+  'signer.champion.ok':            'Authorized (Campaign)',
+  'signer.champion.notAllowed':    'Not authorized',
+  'signer.champion.notAllowedMsg': 'This wallet is not a champion contract admin, so it cannot create or finalize on-chain. Switch to a contract admin wallet.',
+  'signer.champion.allowedList':   'Authorized champion admin addresses:',
+  'signer.champion.allowedEmpty':  'No champion admins resolved (contract may be undeployed or address unset).',
+
+'signer.target.title':         'Wallet for this action',
+  'signer.target.ok':            'Matched',
+  'signer.target.notAllowed':    'Not matched',
+  'signer.target.notAllowedMsg': 'This wallet is not the event creator. Click "Switch wallet" and pick the address below.',
+  'signer.target.allowedList':   'Event creator address:',
+  'signer.target.allowedEmpty':  '',
+};

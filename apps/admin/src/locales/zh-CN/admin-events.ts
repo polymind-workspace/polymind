@@ -1,0 +1,85 @@
+export default {
+  'adminEvents.create.section.event':   '事件',
+  'adminEvents.create.section.answers': '选项',
+
+  'adminEvents.create.label.question':      '问题',
+  'adminEvents.create.label.slug':          'Slug（选填，留空自动生成）',
+  'adminEvents.create.label.slugShort':     'Slug',
+  'adminEvents.create.label.bettingOpens':  '开始下注时间',
+  'adminEvents.create.label.bettingCloses': '截止下注时间',
+  'adminEvents.create.label.minBet':        '最低下注（EDS）',
+  'adminEvents.create.label.minBetShort':   '最低下注',
+  'adminEvents.create.label.prize':         '奖池（EDS）',
+  'adminEvents.create.label.prizeShort':    '奖池',
+  'adminEvents.create.label.contract':      '合约',
+  'adminEvents.create.label.h5url':         'H5 链接',
+  'adminEvents.create.label.txhash':        '交易哈希',
+
+  'adminEvents.create.ph.question': '例如：谁会赢得 IPL 2026？',
+  'adminEvents.create.ph.slug':     'ipl-2026-winner',
+  'adminEvents.create.ph.datetime': '选择日期和时间',
+  'adminEvents.create.ph.answer':   '选项内容',
+
+  'adminEvents.create.required':         '必填',
+  'adminEvents.create.question.required': '请输入问题',
+  'adminEvents.create.validate.startFuture':   '开始时间必须晚于当前时间',
+  'adminEvents.create.validate.endAfterStart': '截止时间必须晚于开始时间',
+  'adminEvents.create.validate.minAnswers':    '至少需要 2 个选项',
+  'adminEvents.create.validate.duplicate':     '存在重复选项：{list}',
+
+  'adminEvents.create.btn.review':    '预览并上链创建',
+  'adminEvents.create.btn.addAnswer': '添加选项',
+  'adminEvents.create.btn.viewAll':   '查看全部官方事件',
+
+  'adminEvents.create.tip.connectWallet': '请先连接已授权的钱包',
+  'adminEvents.create.toast.dbSyncFailed': '上链成功，但数据库同步失败：{error}',
+  'adminEvents.create.tx.name': '创建官方事件',
+
+  'adminEvents.create.result.success': '事件创建成功',
+
+  'adminEvents.create.confirm.title': '确认创建事件',
+  'adminEvents.create.confirm.ok':    '上链创建',
+  'adminEvents.create.confirm.depositNote':
+    '将打开钱包签名交易，存入 {amount} 作为奖池。',
+
+  'adminEvents.list.status.open':     '进行中',
+  'adminEvents.list.status.ended':    '已截止',
+  'adminEvents.list.status.resolved': '已结算',
+
+  'adminEvents.list.col.question':     '问题',
+  'adminEvents.list.col.answers':      '选项',
+  'adminEvents.list.col.endTime':      '截止时间',
+  'adminEvents.list.col.participants': '参与人数',
+  'adminEvents.list.col.collected':    '已收下注',
+  'adminEvents.list.col.status':       '状态',
+  'adminEvents.list.col.h5':           'H5 页面',
+  'adminEvents.list.col.h5open':       '打开',
+  'adminEvents.list.col.created':      '创建时间',
+  'adminEvents.list.col.action':       '操作',
+
+  'adminEvents.list.tag.free':              '免费事件',
+  'adminEvents.list.tag.noBets':            '暂无下注',
+  'adminEvents.list.tag.pendingWithdrawal': '待提取',
+  'adminEvents.list.tag.withdrawn':         '已提取 ✓',
+  'adminEvents.list.tag.participants':      '{count} 名参与者',
+
+  'adminEvents.list.finalize.btn':           '结算',
+  'adminEvents.list.finalize.afterEnd':      '事件结束后可结算',
+  'adminEvents.list.finalize.modalTitle':    '结算：{question}',
+  'adminEvents.list.finalize.submit':        '提交上链',
+  'adminEvents.list.finalize.answersLabel':  '选项：',
+  'adminEvents.list.finalize.correctAnswer': '正确答案',
+  'adminEvents.list.finalize.txName':        '结算官方事件',
+  'adminEvents.list.finalize.success':       '事件已结算 — 获胜方：{winner}',
+
+  'adminEvents.list.withdraw.btn':     '提取',
+  'adminEvents.list.withdraw.loading': '加载余额…',
+  'adminEvents.list.withdraw.tooltip': '提取 {amount}',
+  'adminEvents.list.withdraw.none':    '没有可提取的下注',
+  'adminEvents.list.withdraw.txName':  '提取已收下注',
+  'adminEvents.list.withdraw.success': '已从 {slug} 提取',
+
+  'adminEvents.list.btn.newSpecial': '新建特殊事件',
+  'adminEvents.list.totalEvents':    '共 {n} 个事件',
+  'adminEvents.list.empty':          '暂无官方事件',
+};
