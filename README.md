@@ -5,7 +5,7 @@
 - **Web 前端**：响应式 Web App（原微信小程序 superbox 迁移）
 - **后端**：FastAPI + SQLAlchemy 2.0 (async) + Alembic + PostgreSQL
 - **链上程序**：Anchor（Rust）
-- **索引器**：Rust + sqlx，监听 Solana program logs 写入 PostgreSQL
+- **索引器**：Python Worker（`apps/api/app/workers/`），轮询 Solana RPC、解析 program logs 写入 PostgreSQL
 
 ---
 
@@ -19,7 +19,7 @@
 | 后端 | FastAPI + SQLAlchemy 2.0 async + Alembic |
 | 数据库 | PostgreSQL 18（Docker，端口 5433） |
 | 链上程序 | Anchor (Rust) |
-| 索引器 | Rust + Tokio + sqlx |
+| 索引器 | Python Worker (`apps/api/app/workers/`) |
 | 包管理 | pnpm (web) + uv (api) + Cargo (solana) |
 
 ---
@@ -33,13 +33,12 @@
 │   ├── api/                  # FastAPI（端口 8300）
 │   └── admin/                # 占位，未接入
 ├── solana/
-│   ├── programs/polymind/    # Anchor 程序
-│   └── indexer/              # Rust 链上事件索引器
+│   └── programs/polymind/    # Anchor 程序
 ├── docs/
 │   ├── architecture.md       # 架构设计
 │   ├── progress.md           # 当前进展
 │   └── PLAN.md               # 第一阶段实施计划
-├── dev.sh                    # 一键启动 web + api + indexer
+├── dev.sh                    # 一键启动 web + admin + api + workers
 ├── docker-compose.yml        # PostgreSQL
 ├── package.json
 └── README.md
@@ -218,9 +217,15 @@ bash dev.sh
 启动内容：
 
 - Web：`http://localhost:3100`
+- Admin：`http://localhost:8000`
 - API：`http://localhost:8300/health`
 - API 文档：`http://localhost:8300/docs`
-- Indexer：当 `SOLANA_PROGRAM_ID` 设置时自动启动
+- Python workers（由 `dev.sh` 自动拉起）：
+  - `app.workers.indexer`（需配置 `SOLANA_PROGRAM_ID`）
+  - `app.workers.champion_indexer`
+  - `app.workers.notification_worker`
+  - `app.workers.deadline_cron`
+  - `app.workers.referral_reward_worker`
 
 关闭时按 `Ctrl-C`，`dev.sh` 会同时杀掉所有子进程。
 
@@ -233,9 +238,13 @@ pnpm dev:web
 # 后端（含 Alembic 迁移）
 pnpm dev:api
 
-# 索引器（需要 SOLANA_PROGRAM_ID 环境变量）
-cd solana/indexer
-cargo run
+# Python workers（需要 SOLANA_PROGRAM_ID 等环境变量）
+cd apps/api
+uv run python -m app.workers.indexer           # PolyMind 主程序索引
+uv run python -m app.workers.champion_indexer  # Champion 活动索引
+uv run python -m app.workers.notification_worker
+uv run python -m app.workers.deadline_cron
+uv run python -m app.workers.referral_reward_worker
 ```
 
 ---
@@ -254,13 +263,13 @@ cargo run
 | `uv run alembic revision --autogenerate -m "msg"` | 生成数据库迁移 |
 | `anchor build` | 编译 Solana 程序 |
 | `anchor deploy --provider.cluster devnet` | 部署到 devnet |
-| `cargo check` / `cargo run` | 检查/运行 Rust indexer |
+| `uv run python -m app.workers.indexer` | 运行 PolyMind 主程序索引 worker |
 
 ---
 
 ## Solana 端到端验证
 
-部署程序并启动 indexer 后，调用 `emit_test_event`：
+部署程序并启动 `app.workers.indexer` 后，调用 `emit_test_event`：
 
 ```bash
 cd solana/programs/polymind
@@ -332,7 +341,7 @@ cargo install --git https://github.com/solana-foundation/anchor --tag v1.0.2 anc
 
 **解决**：配置中科大 sparse index 镜像，见上文 `~/.cargo/config.toml`。
 
-### 5. indexer 编译报 OpenSSL 找不到
+### 5. Anchor 程序编译报 OpenSSL 找不到
 
 **现象**：
 
