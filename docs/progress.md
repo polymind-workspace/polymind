@@ -60,8 +60,23 @@
 - [x] `app/core/config.py`：pydantic-settings 统一配置，默认 PostgreSQL
 - [x] `app/db/session.py`：async SQLAlchemy engine + session，移除 SQLite 分支
 - [x] `app/models/user.py`：User model（含 invite_code、is_admin 等）
+- [x] Phase 2 MVP 模型：`events`、`markets`、`positions`、`trades`、`disputes`、`notifications`、`referrals`、`referral_rewards`、`event_categories`、`tags`、`event_tags`、`configs`、`admin_accounts`、`indexer_cursor`
+- [x] Alembic migration `a7aaa0c86803_phase2_mvp_tables` 已生成并运行
+- [x] `app/scripts/seed.py`：categories / configs / admin / default user seed
+- [x] `app/services/`：Market / Leaderboard / Prediction / Notification / Profile / Referral services
+- [x] `app/routers/`：markets / leaderboard / predictions / notifications / profile / referrals 读 API
+- [x] `app/dependencies/auth.py`：轻量 auth dependency
 - [x] `app/routers/users.py`：示例 `/api/v1/users` CRUD 列表
 - [x] `alembic/`：PostgreSQL 初始 migration
+
+### 前端数据层
+- [x] `apps/web/src/lib/api/markets.ts`：market list / detail API 封装
+- [x] `apps/web/src/lib/api/leaderboard.ts`
+- [x] `apps/web/src/lib/api/predictions.ts`
+- [x] `apps/web/src/lib/api/notifications.ts`
+- [x] `apps/web/src/lib/api/profile.ts`
+- [x] `apps/web/src/lib/api/referrals.ts`
+- [x] 首页、市场详情、排行榜、我的预测、通知、个人中心、邀请页已切换到真实 API
 
 ### 验证
 - [x] `pnpm typecheck` 通过
@@ -80,8 +95,7 @@
 - 走势图为 mock 折线，非真实价格数据。
 - 右侧边栏的「永续合约」「创建组合」是 Polymarket 风格的 UI 占位，不代表真实功能。
 - `apps/admin` 未接入。
-- 完整数据模型（events、markets、positions、trades、disputes、chain_event_log、indexer_cursor 等）尚未生成 migration。
-- Rust indexer 尚未实现。
+- Rust indexer 尚未实现业务事件解析（只有 `TestEvent` 骨架）。
 - Solana 程序 IDL 已按 parimutuel 状态机确定，待实现。
 
 ---
@@ -106,12 +120,10 @@
 ## 下一步建议
 
 1. **实现 Anchor 程序骨架**（`solana/programs/polymind/`）：Event / Market / Position / Vault PDA，固定赔率状态机。
-2. **实现 Rust indexer 基础框架**（`solana/indexer/`）：RPC `logsSubscribe` → 解析 Anchor event → 写入 PostgreSQL。
-3. **添加完整数据模型 migration**（events、markets、positions、trades、disputes、chain_event_log、indexer_cursor 等）。
-4. **补充 Python Solana client + sync router**。
-5. **补充 admin routers**（dashboard、events、markets、tags、users、disputes、leaderboard 等）。
-6. **把 `apps/web` mock handler 切换到真实 API**。
-7. **评估 TypeScript 版本**：`@solana/kit` peer 依赖 ^5.0.0，当前 6.0.3 虽能跑但长期需关注。
+2. **实现 Rust indexer 业务事件解析**（`solana/indexer/`）：解析 `BetPlaced` / `MarketCreated` 等事件并写入 domain 表。
+3. **补充 Python Solana client + sync router**。
+4. **补充 admin routers**（events、markets、tags、users、disputes、leaderboard 等）。
+5. **评估 TypeScript 版本**：`@solana/kit` peer 依赖 ^5.0.0，当前 6.0.3 虽能跑但长期需关注。
 
 ---
 
