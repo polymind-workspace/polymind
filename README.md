@@ -156,8 +156,6 @@ pnpm install
 
 ```bash
 cp .env.example .env
-cp apps/api/.env.example apps/api/.env
-cp apps/web/.env.example apps/web/.env
 ```
 
 当前程序 ID 已预填：

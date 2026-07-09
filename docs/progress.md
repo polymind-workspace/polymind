@@ -16,10 +16,13 @@
 - [x] `pnpm-workspace.yaml` + `package.json` 根工作区
 - [x] `apps/web`：TanStack Start + Vite + React 19 + TypeScript
 - [x] `apps/api`：FastAPI + SQLAlchemy 2.0 (async) + Alembic 标准骨架，PostgreSQL 默认
-- [x] `apps/api/.env.example` + `docker-compose.yml`（PostgreSQL 18，本机端口 5433）
+- [x] 根目录 `.env.example`（唯一模板）+ `.env` 本地配置
+- [x] `apps/api/app/core/config.py` 读取根目录 `.env`，支持 `cd apps/api` 单独启动
+- [x] `apps/web/vite.config.ts` 设置 `envDir: '../..'`，支持 `cd apps/web` 单独启动读取根目录 `.env`
+- [x] `apps/admin/package.json` 使用 `dotenv-cli` 加载根目录 `.env`，支持 `cd apps/admin` 单独启动
+- [x] `docker-compose.yml`（PostgreSQL 18，本机端口 5433）
 - [x] `apps/api/alembic` 初始迁移已生成并验证通过
-- [x] `apps/admin`：空文件夹占位
-- [x] `.env.example` + `apps/web/.env` 本地配置
+- [x] `apps/admin`：Ant Design Pro + umi/max 管理后台
 - [x] 根目录 `dev.sh` 一键启动 web + admin + api + Python workers
 - [x] 端口选为 `3100/8300`，避免与 repurposer 冲突
 - [x] `solana/` 目录规划在根目录（Anchor 程序）
