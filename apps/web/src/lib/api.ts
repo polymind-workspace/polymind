@@ -54,7 +54,7 @@ export async function apiPost(
 ) {
   return apiFetch(path, {
     method: "POST",
-    body: body ? JSON.stringify(body) : undefined,
+    body,
     ...options,
   })
 }
@@ -66,7 +66,7 @@ export async function apiPut(
 ) {
   return apiFetch(path, {
     method: "PUT",
-    body: body ? JSON.stringify(body) : undefined,
+    body,
     ...options,
   })
 }

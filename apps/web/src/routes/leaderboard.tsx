@@ -1,23 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { apiGet } from "@/lib/api"
+import { fetchLeaderboard, type LeaderboardEntry } from "@/lib/api/leaderboard"
 import { PageLayout } from "@/components/layout/PageLayout"
 import { LeaderboardTabs, type LeaderboardType } from "@/components/leaderboard/LeaderboardTabs"
 import { TopThreePodium } from "@/components/leaderboard/TopThreePodium"
 import { LeaderboardRow } from "@/components/leaderboard/LeaderboardRow"
 import { Button } from "@/components/ui/button"
-import type { LeaderboardEntry } from "@/types"
 
 export const Route = createFileRoute("/leaderboard")({
   component: Leaderboard,
 })
-
-interface LeaderboardResponse {
-  ret: number
-  msg: string
-  data: LeaderboardEntry[]
-}
 
 function Leaderboard() {
   const { t } = useTranslation()
@@ -27,11 +20,8 @@ function Leaderboard() {
 
   useEffect(() => {
     setLoading(true)
-    apiGet(`/leaderboard/${type}`)
-      .then((r) => r.json())
-      .then((payload: LeaderboardResponse) => {
-        if (payload.ret === 200) setEntries(payload.data)
-      })
+    fetchLeaderboard(type)
+      .then((data) => setEntries(data))
       .finally(() => setLoading(false))
   }, [type])
 

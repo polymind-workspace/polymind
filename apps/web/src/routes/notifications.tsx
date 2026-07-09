@@ -2,21 +2,18 @@ import { createFileRoute } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Bell, Gift, Info, CircleDollarSign } from "lucide-react"
-import { apiGet } from "@/lib/api"
+import {
+  fetchNotifications,
+  markNotificationsRead,
+  type Notification,
+} from "@/lib/api/notifications"
 import { PageLayout } from "@/components/layout/PageLayout"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import type { Notification } from "@/types"
 
 export const Route = createFileRoute("/notifications")({
   component: Notifications,
 })
-
-interface NotificationsResponse {
-  ret: number
-  msg: string
-  data: Notification[]
-}
 
 const icons: Record<Notification["type"], React.ElementType> = {
   bet: CircleDollarSign,
@@ -31,15 +28,13 @@ function Notifications() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    apiGet("/notifications")
-      .then((r) => r.json())
-      .then((payload: NotificationsResponse) => {
-        if (payload.ret === 200) setNotifications(payload.data)
-      })
+    fetchNotifications()
+      .then((data) => setNotifications(data.items))
       .finally(() => setLoading(false))
   }, [])
 
-  const markAllRead = () => {
+  const markAllRead = async () => {
+    await markNotificationsRead()
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
   }
 

@@ -1,23 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { apiGet } from "@/lib/api"
+import { fetchPredictions, type UserPosition } from "@/lib/api/predictions"
 import { PageLayout } from "@/components/layout/PageLayout"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { TrendingUp, TrendingDown } from "lucide-react"
-import type { UserPosition } from "@/types"
 import { cn } from "@/lib/utils"
 
 export const Route = createFileRoute("/predictions")({
   component: Predictions,
 })
-
-interface PredictionsResponse {
-  ret: number
-  msg: string
-  data: UserPosition[]
-}
 
 function Predictions() {
   const { t } = useTranslation()
@@ -26,13 +19,11 @@ function Predictions() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    apiGet("/predictions")
-      .then((r) => r.json())
-      .then((payload: PredictionsResponse) => {
-        if (payload.ret === 200) setPositions(payload.data)
-      })
+    setLoading(true)
+    fetchPredictions(tab === "participated" ? "active" : "resolved")
+      .then((data) => setPositions(data))
       .finally(() => setLoading(false))
-  }, [])
+  }, [tab])
 
   const filtered = positions.filter((p) =>
     tab === "participated" ? p.status !== "resolved" : p.status === "resolved"

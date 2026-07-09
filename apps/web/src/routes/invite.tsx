@@ -5,6 +5,7 @@ import { Copy, Users, Coins, Clock } from "lucide-react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Button } from "@/components/ui/button";
 import { useWallet } from "@/lib/wallet";
+import { fetchReferrals, type ReferralSummary } from "@/lib/api/referrals";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/invite")({
@@ -15,9 +16,14 @@ function Invite() {
   const { t } = useTranslation();
   const { address } = useWallet();
   const [copied, setCopied] = useState(false);
+  const [summary, setSummary] = useState<ReferralSummary | null>(null);
 
-  const referralCode = address ? `PM-${address.slice(0, 8).toUpperCase()}` : "";
+  const referralCode = summary?.code ?? (address ? `PM-${address.slice(0, 8).toUpperCase()}` : "");
   const [referralLink, setReferralLink] = useState("");
+
+  useEffect(() => {
+    fetchReferrals().then(setSummary);
+  }, []);
 
   useEffect(() => {
     if (referralCode) {
@@ -65,17 +71,17 @@ function Invite() {
               <StatCard
                 icon={Users}
                 label={t("invite.totalInvited")}
-                value="0"
+                value={String(summary?.invitee_count ?? 0)}
               />
               <StatCard
                 icon={Coins}
                 label={t("invite.totalRewards")}
-                value="$0.00"
+                value={`$${(summary?.paid_rewards ?? 0).toFixed(2)}`}
               />
               <StatCard
                 icon={Clock}
                 label={t("invite.pendingRewards")}
-                value="$0.00"
+                value={`$${(summary?.pending_rewards ?? 0).toFixed(2)}`}
               />
             </div>
 

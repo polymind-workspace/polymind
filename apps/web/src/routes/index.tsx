@@ -1,7 +1,7 @@
 import { createFileRoute, useSearch } from "@tanstack/react-router"
 import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { apiGet } from "@/lib/api"
+import { fetchMarkets, type MarketItem } from "@/lib/api/markets"
 import { PageLayout } from "@/components/layout/PageLayout"
 import { CategoryTabs, type Category } from "@/components/markets/CategoryTabs"
 import { TagFilter } from "@/components/markets/TagFilter"
@@ -11,19 +11,6 @@ import { HomeSidebar } from "@/components/home/HomeSidebar"
 import { Button } from "@/components/ui/button"
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
 import { getTagsForCategory } from "@/lib/mock"
-import type { Market } from "@/types"
-
-interface MarketsResponse {
-  ret: number
-  msg: string
-  data: {
-    items: Market[]
-    total: number
-    page: number
-    limit: number
-    hasMore: boolean
-  }
-}
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -36,7 +23,7 @@ function Home() {
 
   const [category, setCategory] = useState<Category>("all")
   const [tag, setTag] = useState("全部")
-  const [markets, setMarkets] = useState<Market[]>([])
+  const [markets, setMarkets] = useState<MarketItem[]>([])
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [loading, setLoading] = useState(false)
@@ -48,15 +35,14 @@ function Home() {
     setLoading(true)
     setError("")
     try {
-      const res = await apiGet(
-        `/markets?category=${category}&search=${encodeURIComponent(search)}&page=${nextPage}&limit=24`
-      )
-      const payload = (await res.json()) as MarketsResponse
-      if (payload.ret !== 200) throw new Error(payload.msg)
-      setMarkets((prev) =>
-        replace ? payload.data.items : [...prev, ...payload.data.items]
-      )
-      setHasMore(payload.data.hasMore)
+      const payload = await fetchMarkets({
+        category,
+        search,
+        page: nextPage,
+        limit: 24,
+      })
+      setMarkets((prev) => (replace ? payload.items : [...prev, ...payload.items]))
+      setHasMore(payload.hasMore)
       setPage(nextPage)
     } catch (e) {
       setError(t("home.loadFailed"))

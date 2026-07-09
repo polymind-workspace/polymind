@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ArrowLeft } from "lucide-react"
-import { apiGet } from "@/lib/api"
+import { fetchMarketBySlug, type MarketDetail } from "@/lib/api/markets"
 import { PageLayout } from "@/components/layout/PageLayout"
 import { OutcomeStats } from "@/components/markets/OutcomeStats"
 import { BetPanel } from "@/components/markets/BetPanel"
@@ -10,15 +10,7 @@ import { ActivityFeed } from "@/components/markets/ActivityFeed"
 import { MarketCard } from "@/components/markets/MarketCard"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { mockMarkets } from "@/lib/mock"
-import type { MarketDetail } from "@/types"
 import { cn } from "@/lib/utils"
-
-interface MarketDetailResponse {
-  ret: number
-  msg: string
-  data: MarketDetail
-}
 
 export const Route = createFileRoute("/markets/$eventId")({
   component: MarketDetail,
@@ -32,19 +24,16 @@ function MarketDetail() {
   const [error, setError] = useState("")
 
   useEffect(() => {
-    apiGet(`/markets/${eventId}`)
-      .then((r) => r.json())
-      .then((payload: MarketDetailResponse) => {
-        if (payload.ret !== 200) throw new Error(payload.msg)
-        setMarket(payload.data)
+    fetchMarketBySlug(eventId)
+      .then((data) => {
+        if (!data) throw new Error(t("home.loadFailed"))
+        setMarket(data)
       })
       .catch(() => setError(t("home.loadFailed")))
       .finally(() => setLoading(false))
   }, [eventId, t])
 
-  const related = mockMarkets
-    .filter((m) => m.slug !== eventId && m.category === market?.category)
-    .slice(0, 3)
+  const related = market?.related_markets?.slice(0, 3) ?? []
 
   if (loading) {
     return (
