@@ -20,9 +20,9 @@
 - [x] `apps/api/alembic` 初始迁移已生成并验证通过
 - [x] `apps/admin`：空文件夹占位
 - [x] `.env.example` + `apps/web/.env` 本地配置
-- [x] 根目录 `dev.sh` 一键启动 web + api
+- [x] 根目录 `dev.sh` 一键启动 web + admin + api + Python workers
 - [x] 端口选为 `3100/8300`，避免与 repurposer 冲突
-- [x] `solana/` 目录规划在根目录（程序 + Rust indexer）
+- [x] `solana/` 目录规划在根目录（Anchor 程序）
 
 ### 前端依赖与配置
 - [x] shadcn/ui (base-ui) 组件库
@@ -82,7 +82,7 @@
 - [x] `pnpm typecheck` 通过
 - [x] `pnpm test` 通过
 - [x] `pnpm build` 通过（client + SSR）
-- [x] `bash dev.sh` 可正常拉起 web + api（含 Alembic 迁移）
+- [x] `bash dev.sh` 可正常拉起 web + admin + api + Python workers（含 Alembic 迁移）
 - [x] `uv run alembic upgrade head` 通过（PostgreSQL）
 - [x] `uv run ruff check app` 通过
 
@@ -95,7 +95,7 @@
 - 走势图为 mock 折线，非真实价格数据。
 - 右侧边栏的「永续合约」「创建组合」是 Polymarket 风格的 UI 占位，不代表真实功能。
 - `apps/admin` 未接入。
-- Rust indexer 尚未实现业务事件解析（只有 `TestEvent` 骨架）。
+- Python Worker（`app/workers/indexer.py`）已实现主程序事件解析，Champion/通知/定时/推荐奖励 worker 已就绪。
 - Solana 程序 IDL 已按 parimutuel 状态机确定，待实现。
 
 ---
@@ -103,7 +103,7 @@
 ## 架构决策（已确定）
 
 1. **Admin 不单独成域**：统一 router，权限通过 `require_permission` dependency 注入。
-2. **Python API 不监听链**：链上事件由 Rust indexer 处理，API 只读 PostgreSQL + 校验 tx sync。
+2. **Python API Worker 监听链**：`app/workers/indexer.py` 轮询 Solana RPC、解析事件、写 PostgreSQL；Web API 只读 PostgreSQL + 校验 tx sync。与旧 PolyMind 架构一致。
 3. **PostgreSQL 唯一数据库**：移除 SQLite fallback。
 4. **Solana 项目在根目录 `solana/`**：不和 `apps/` 混排。
 5. **前端钱包用 `@solana/react-hooks`**：替代旧的 `@wallet-standard/react`。
@@ -113,14 +113,14 @@
 9. **单边保护**：`single_side_only=true`，单边 pool 自动 VOID。
 10. **MarketConfig 快照**：每个 market 创建时复制全局费率与窗口配置，admin 后续改动不影响已创建市场。
 11. **争议机制**：首次 dispute 后 market 永久只能 admin finalize。
-12. **Indexeer 数据源**：开发阶段用 Solana RPC `logsSubscribe`，不引入 Helius/Yellowstone。
+12. **Indexer 数据源**：Python worker 使用 Solana RPC `getSignaturesForAddress` + `getTransaction` 轮询，不引入 Helius/Yellowstone。
 
 ---
 
 ## 下一步建议
 
 1. **实现 Anchor 程序骨架**（`solana/programs/polymind/`）：Event / Market / Position / Vault PDA，固定赔率状态机。
-2. **实现 Rust indexer 业务事件解析**（`solana/indexer/`）：解析 `BetPlaced` / `MarketCreated` 等事件并写入 domain 表。
+2. **完善 Python Worker 事件解析与可观测性**（`app/workers/indexer.py`），确保所有 parimutuel 事件写入 domain 表。
 3. **补充 Python Solana client + sync router**。
 4. **补充 admin routers**（events、markets、tags、users、disputes、leaderboard 等）。
 5. **评估 TypeScript 版本**：`@solana/kit` peer 依赖 ^5.0.0，当前 6.0.3 虽能跑但长期需关注。
@@ -129,6 +129,4 @@
 
 Sources:
 - [Helius: How to Index Solana Data](https://www.helius.dev/docs/rpc/how-to-index-solana-data)
-- [Predix backend (Rust indexer + Postgres)](https://github.com/sarthakitaliya/Predix-backend)
-- [sol-indexer (Rust + Postgres template)](https://github.com/Jayant818/sol-indexer)
 - [anchorpy GitHub](https://github.com/kevinheavey/anchorpy)

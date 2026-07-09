@@ -5,7 +5,7 @@
 > 核心设计原则：
 > - **Admin 不单独成域**：admin 操作挂在资源 router 下，通过 `require_permission` 区分。
 > - **链上写操作按资源分端点**：如 `/api/v1/events/sync`、`/api/v1/trades/sync`。
-> - **Python API 不监听链**：链上事件由 Rust indexer 解析写入 PostgreSQL；API 只做轻量确认和读查询。
+> - **Python API Worker 监听链**：`app/workers/indexer.py` 轮询 Solana RPC、解析事件、写入 PostgreSQL；Web API 只做轻量确认和读查询。与旧 PolyMind 架构一致。
 > - **不新增 Redis 等基础设施**：nonce、push、job queue 等先用 PostgreSQL，后续真有瓶颈再引入。
 
 ---
@@ -402,7 +402,7 @@ class EventUpdateRequest(BaseModel):
 - 公开列表默认不返回 `is_flagged=True` 的事件（admin 列表可返回）。
 - `source` 枚举：`official`、`admin`、`user`、`champion`。
 - `POST /events/draft` 写 `events.status = "draft"`。
-- `POST /events/sync` 只确认 signature，真正写 `events` / `markets` 由 Rust indexer 完成；indexer 成功后把同一 event 状态改为 `open`。
+- `POST /events/sync` 只确认 signature，真正写 `events` / `markets` 由 `app/workers/indexer.py` 完成；worker 成功后把同一 event 状态同步为 `open`。
 - `DELETE` 仅允许删除 `status == "draft"` 或未上链的事件。
 - Event status 由 indexer 根据子 market 状态物化更新，避免查询时推导。
 
@@ -513,7 +513,7 @@ class ClaimSyncRequest(BaseModel):
 
 - 提交争议需用户在该 market 有持仓。
 - 首次 dispute 后 market `dispute_active=True`，且只能 admin finalize。
-- Rust indexer 处理 `DisputeResolved` + `MarketFinalized` 时原子更新 dispute 行和 market 行。
+- Python worker 处理 `DisputeResolved` + `MarketFinalized` 时原子更新 dispute 行和 market 行。
 
 ---
 
@@ -784,7 +784,7 @@ uv run alembic upgrade head
 ### Phase 5：链上闭环
 
 1. Solana 程序 IDL / PDA 确定后，补全各 sync 端点的真实校验。
-2. Rust indexer 业务解析完成后，验证 DB 写入正确性。
+2. Python worker 业务解析完成后，验证 DB 写入正确性。
 3. 联调前端写链 → sync → 读 API 完整流程。
 
 ---
