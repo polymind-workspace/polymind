@@ -1,6 +1,8 @@
 from app.models.activity import Activity
 from app.models.admin_account import AdminAccount
+from app.models.batch_transfer import BatchTransfer
 from app.models.chain_event_log import ChainEventLog
+from app.models.chat_message import ChatMessage
 from app.models.config import Config
 from app.models.creator_reward import CreatorReward
 from app.models.dashboard_stats import DashboardStats
@@ -17,6 +19,7 @@ from app.models.position import Position
 from app.models.push_message import PushMessage
 from app.models.referral import Referral
 from app.models.referral_reward import ReferralReward
+from app.models.reward_payout import RewardPayout
 from app.models.tag import Tag
 from app.models.trade import Trade
 from app.models.user import User
@@ -24,7 +27,9 @@ from app.models.user import User
 __all__ = [
     "Activity",
     "AdminAccount",
+    "BatchTransfer",
     "ChainEventLog",
+    "ChatMessage",
     "Config",
     "CreatorReward",
     "DashboardStats",
@@ -41,6 +46,7 @@ __all__ = [
     "PushMessage",
     "Referral",
     "ReferralReward",
+    "RewardPayout",
     "Tag",
     "Trade",
     "User",

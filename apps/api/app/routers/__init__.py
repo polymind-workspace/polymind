@@ -4,6 +4,8 @@ from app.routers import (
     activities,
     admin_accounts,
     auth,
+    batch_transfers,
+    chat,
     configs,
     dashboard,
     disputes,
@@ -12,11 +14,14 @@ from app.routers import (
     markets,
     media,
     notifications,
+    polymarket,
     positions,
     predictions,
     profile,
     push,
     referrals,
+    reward_payouts,
+    share,
     solana_events,
     sync,
     tags,
@@ -41,6 +46,11 @@ api_router.include_router(activities.router)
 api_router.include_router(media.router)
 api_router.include_router(push.router)
 api_router.include_router(dashboard.router)
+api_router.include_router(polymarket.router)
+api_router.include_router(chat.router)
+api_router.include_router(share.router)
+api_router.include_router(reward_payouts.router)
+api_router.include_router(batch_transfers.router)
 api_router.include_router(leaderboard.router)
 api_router.include_router(predictions.router)
 api_router.include_router(notifications.router)
