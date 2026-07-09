@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     # Admin bootstrap
     backend_admin_bootstrap: str = ""
 
+    # File uploads
+    upload_dir: str = "data/uploads"
+    upload_url_prefix: str = "/uploads"
+
     @field_validator("jwt_secret", "admin_jwt_secret")
     @classmethod
     def _validate_jwt_secret(cls, value: str) -> str:

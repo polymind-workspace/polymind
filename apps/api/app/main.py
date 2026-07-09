@@ -1,8 +1,11 @@
 """PolyMind API."""
 
+from pathlib import Path
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 # Import models so Base.metadata knows about them.
 import app.models  # noqa: F401
@@ -26,6 +29,11 @@ app = FastAPI(
 # Request logging must run before CORS so the response header is attached before
 # CORS middleware finalizes the response.
 app.add_middleware(RequestLoggingMiddleware)
+
+# Serve uploaded media files. In production this is usually handled by a CDN
+# or object storage; the local directory mount is for MVP development.
+Path(settings.upload_dir).mkdir(parents=True, exist_ok=True)
+app.mount(settings.upload_url_prefix, StaticFiles(directory=settings.upload_dir), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,
