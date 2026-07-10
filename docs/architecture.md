@@ -114,14 +114,21 @@ polymind/
 3. 构造并发送链上 transaction（gasless 场景由 relayer 作为 fee payer）
 4. 得到 tx_signature
 5. 前端轮询确认（confirmed / finalized）
-6. 确认后 POST /api/v1/sync { signature, kind }
-   kind: "create_event" | "create_market" | "bet" | "propose" | "finalize" | "claim" | "dispute"
-7. API 校验 signature 存在且有效
+6. 确认后调用对应业务同步端点：
+   - 创建事件/市场：POST /api/v1/events/sync { signature }
+   - 下注：POST /api/v1/trades/sync { signature }
+   - 提案：POST /api/v1/markets/{slug}/propose { signature }
+   - 结算：POST /api/v1/markets/{slug}/finalize { signature }
+   - VOID：POST /api/v1/markets/{slug}/void { signature }
+   - Claim：POST /api/v1/markets/{slug}/claim { signature }
+   - 争议：POST /api/v1/disputes { signature, ... }
+   - 轻量确认（可选）：POST /api/v1/sync { signature, kind }
+7. API 从 Solana RPC 拉取 transaction，校验 signature、instruction discriminator 和事件
 8. Python Worker（app/workers/indexer.py）监听链上事件，写入 PostgreSQL
 9. API 从 PostgreSQL 返回最新状态
 ```
 
-前端写链、后端同步的模型与旧 PolyMind 一致：Python worker 轮询 Solana RPC，解析 program logs 后写库，sync 端点仅做轻量校验。
+前端写链、后端同步的模型与旧 PolyMind 一致：Python worker 轮询 Solana RPC，解析 program logs 后写库，业务 sync 端点负责即时校验 transaction 内容。
 
 ### 4.2 查询流程
 
