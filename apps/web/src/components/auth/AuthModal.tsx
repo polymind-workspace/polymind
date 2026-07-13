@@ -11,30 +11,64 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useWallet } from "@/lib/wallet";
+import { runAuthHandshake, webSiwsApi, tokenStore } from "@/lib/auth";
+import { MOCK_CONNECTOR_ID } from "@polymind/wallet";
 
 interface AuthModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const CONNECTORS = [
-  { id: "wallet-standard:phantom", label: "Phantom" },
-  { id: "wallet-standard:solflare", label: "Solflare" },
-  { id: "wallet-standard:backpack", label: "Backpack" },
-];
-
 export function AuthModal({ open, onOpenChange }: AuthModalProps) {
   const { t } = useTranslation();
-  const { status, address, isMock, connect, disconnect } = useWallet();
+  const {
+    status,
+    address,
+    isMock,
+    connectors,
+    isReady,
+    connect,
+    disconnect,
+    signMessageBase58,
+  } = useWallet();
   const [email, setEmail] = useState("");
+  const [signingIn, setSigningIn] = useState(false);
 
   const handleConnect = async (connectorId: string) => {
-    await connect(connectorId);
-    onOpenChange(false);
+    try {
+      setSigningIn(true);
+      const connectedAddress = await connect(connectorId);
+      if (connectorId === MOCK_CONNECTOR_ID || isMock) {
+        onOpenChange(false);
+        return;
+      }
+      if (!connectedAddress) {
+        throw new Error("Wallet did not return an address");
+      }
+      if (!signMessageBase58) {
+        throw new Error("Wallet does not support message signing");
+      }
+      const token = await runAuthHandshake(
+        connectedAddress,
+        signMessageBase58,
+        webSiwsApi
+      );
+      tokenStore.set(token);
+      onOpenChange(false);
+    } catch (e) {
+      const msg = (e as Error).message || "Wallet connection failed";
+      if (!/reject|cancel|denied/i.test(msg)) {
+        // eslint-disable-next-line no-console
+        console.error(msg);
+      }
+    } finally {
+      setSigningIn(false);
+    }
   };
 
   const handleDisconnect = () => {
     disconnect();
+    tokenStore.clear();
     onOpenChange(false);
   };
 
@@ -91,37 +125,46 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              {CONNECTORS.map((connector) => (
-                <Button
-                  key={connector.id}
-                  variant="outline"
-                  className="h-auto justify-start gap-2 px-2 py-2"
-                  onClick={() => void handleConnect(connector.id)}
-                >
-                  <div className="flex h-5 w-5 items-center justify-center rounded bg-muted text-[10px]">
-                    {connector.label[0]}
+              {!isReady ? (
+                <div className="col-span-2 flex items-center justify-center gap-2 rounded-lg bg-muted p-3 text-xs text-muted-foreground">
+                  {t("wallet.connecting")}
+                </div>
+              ) : connectors.length === 0 ? (
+                <div className="col-span-2 flex flex-col gap-2 rounded-lg bg-muted p-3 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Wallet className="h-4 w-4" />
+                    {t("wallet.noWallets")}
                   </div>
-                  <span className="text-xs font-medium">{connector.label}</span>
-                </Button>
-              ))}
+                  <div>{t("wallet.installPrompt")}</div>
+                </div>
+              ) : (
+                connectors.map((connector) => (
+                  <Button
+                    key={connector.id}
+                    variant="outline"
+                    className="h-auto justify-start gap-2 px-2 py-2"
+                    disabled={signingIn}
+                    onClick={() => void handleConnect(connector.id)}
+                  >
+                    <div className="flex h-5 w-5 items-center justify-center rounded bg-muted text-[10px]">
+                      {connector.name?.[0] ?? "W"}
+                    </div>
+                    <span className="text-xs font-medium">{connector.name}</span>
+                  </Button>
+                ))
+              )}
               {import.meta.env.DEV && (
                 <Button
                   variant="secondary"
                   className="h-auto justify-start gap-2 px-2 py-2"
-                  onClick={() => void handleConnect("__mock__")}
+                  disabled={signingIn}
+                  onClick={() => void handleConnect(MOCK_CONNECTOR_ID)}
                 >
                   <div className="flex h-5 w-5 items-center justify-center rounded bg-muted text-[10px]">
                     M
                   </div>
                   <span className="text-xs font-medium">Mock</span>
                 </Button>
-              )}
-              {CONNECTORS.length === 0 && !import.meta.env.DEV && (
-                <div className="col-span-2 flex items-center gap-2 rounded-lg bg-muted p-3 text-xs text-muted-foreground"
-                >
-                  <Wallet className="h-4 w-4" />
-                  {t("wallet.noWallets")}
-                </div>
               )}
             </div>
 

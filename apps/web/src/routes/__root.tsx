@@ -1,11 +1,13 @@
 import { HeadContent, Scripts, createRootRoute, Outlet } from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TanStackDevtools } from "@tanstack/react-devtools"
+import { useEffect, useMemo, useState } from "react"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { I18nProvider } from "@/lib/i18n/I18nProvider"
 import { ThemeProvider } from "@/lib/theme/ThemeProvider"
-import { WalletProvider } from "@/lib/wallet"
+import { WalletProvider } from "@polymind/wallet"
+import { AuthModal } from "@/components/auth/AuthModal"
 
 import appCss from "../styles.css?url"
 
@@ -39,10 +41,28 @@ export const Route = createRootRoute({
 })
 
 function RootComponent() {
+  const [authOpen, setAuthOpen] = useState(false)
+
+  useEffect(() => {
+    const handler = () => setAuthOpen(true)
+    window.addEventListener("polymind-web-401", handler)
+    return () => window.removeEventListener("polymind-web-401", handler)
+  }, [])
+
+  const config = useMemo(
+    () => ({
+      cluster: import.meta.env.VITE_SOLANA_CLUSTER ?? "devnet",
+      rpc: import.meta.env.VITE_SOLANA_RPC ?? "https://api.devnet.solana.com",
+      websocket:
+        import.meta.env.VITE_SOLANA_WS ?? "wss://api.devnet.solana.com",
+    }),
+    []
+  )
+
   return (
     <ThemeProvider>
       <I18nProvider>
-        <WalletProvider>
+        <WalletProvider config={config}>
           <TooltipProvider>
             <SidebarProvider defaultOpen={false}>
               <SidebarInset className="relative min-h-screen overflow-hidden">
@@ -52,6 +72,7 @@ function RootComponent() {
                 </div>
                 <Outlet />
               </SidebarInset>
+              <AuthModal open={authOpen} onOpenChange={setAuthOpen} />
             </SidebarProvider>
           </TooltipProvider>
         </WalletProvider>

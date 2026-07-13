@@ -29,6 +29,7 @@ import {
 import { useTheme } from "@/lib/theme/ThemeProvider"
 import { setLocale } from "@/lib/i18n"
 import { useWallet } from "@/lib/wallet"
+import { tokenStore } from "@/lib/auth"
 import { cn } from "@/lib/utils"
 
 interface UserDropdownProps {
@@ -44,6 +45,7 @@ export function UserDropdown({ className }: UserDropdownProps) {
   const display = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ""
 
   const handleLogout = () => {
+    tokenStore.clear()
     disconnect()
   }
 

@@ -1,20 +1,12 @@
 import { request } from '@umijs/max';
+import { createTokenStore, createAddrStore } from '@polymind/wallet';
 
 const BASE = '/api/v1';
 const TOKEN_KEY = 'polymind_admin_jwt';
 const ADDR_KEY  = 'polymind_admin_addr';
 
-export const tokenStore = {
-  get: () => localStorage.getItem(TOKEN_KEY),
-  set: (t: string) => localStorage.setItem(TOKEN_KEY, t),
-  clear: () => localStorage.removeItem(TOKEN_KEY),
-};
-
-export const addrStore = {
-  get: () => localStorage.getItem(ADDR_KEY),
-  set: (a: string) => localStorage.setItem(ADDR_KEY, a),
-  clear: () => localStorage.removeItem(ADDR_KEY),
-};
+export const tokenStore = createTokenStore(TOKEN_KEY);
+export const addrStore = createAddrStore(ADDR_KEY);
 
 function authReq<T>(url: string, options: Record<string, unknown> = {}): Promise<T> {
   const token = tokenStore.get();

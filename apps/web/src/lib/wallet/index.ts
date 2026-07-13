@@ -1,2 +1,9 @@
-export { WalletProvider, useWallet } from "./WalletProvider";
-export type { WalletContextValue, WalletStatus } from "./WalletProvider";
+export {
+  WalletProvider,
+  useWallet,
+  createTokenStore,
+  createAddrStore,
+  runAuthHandshake,
+  type WalletContextValue,
+  type WalletStatus,
+} from "@polymind/wallet";

@@ -1,14 +1,12 @@
-/** Thin API client with a default bearer token for the no-login MVP.
+/** Thin API client that attaches the SIWS JWT when available.
  *
- * The backend resolves the bearer token to the seeded default user. When real
- * authentication is added, this module is the only place that needs to swap
- * "default" for an actual JWT from a login flow.
+ * The token is issued after wallet sign-in (see lib/auth.ts).
  */
 
 import { mockHandler } from "./mock/handlers"
+import { tokenStore } from "./auth"
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8300"
-const DEFAULT_TOKEN = "default"
 
 function buildUrl(path: string): string {
   const normalized = path.startsWith("/") ? path : `/${path}`
@@ -26,9 +24,8 @@ export async function apiFetch(
   }
 
   const headers = new Headers(options.headers)
-  if (!headers.has("Authorization")) {
-    headers.set("Authorization", `Bearer ${DEFAULT_TOKEN}`)
-  }
+  const token = tokenStore.get()
+  headers.set("Authorization", `Bearer ${token ?? "default"}`)
 
   let body: BodyInit | undefined
   if (options.body instanceof FormData) {
@@ -40,7 +37,16 @@ export async function apiFetch(
     }
   }
 
-  return fetch(buildUrl(path), { ...options, headers, body })
+  const response = await fetch(buildUrl(path), { ...options, headers, body })
+
+  if (response.status === 401) {
+    tokenStore.clear()
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("polymind-web-401"))
+    }
+  }
+
+  return response
 }
 
 export async function apiGet(path: string, options: RequestInit = {}) {

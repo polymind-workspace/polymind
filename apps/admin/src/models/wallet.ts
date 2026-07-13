@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 // Static API: model container is above antd <App> provider.
 import { message } from 'antd';
-import { useWallet } from '@polymind/wallet';
+import { useWallet, runAuthHandshake } from '@polymind/wallet';
 import { addrStore, polymindApi, tokenStore } from '@/services/polymind';
 
 const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
@@ -10,22 +10,12 @@ function normalizeAddress(addr: string | null | undefined): string {
   return (addr || '').trim();
 }
 
-async function runAuthHandshake(address: string, signMessageBase58: (msg: string) => Promise<string>): Promise<string> {
-  const { nonce, message: msg } = await polymindApi.authNonce(address);
-  const signature = await signMessageBase58(msg);
-  const out = await polymindApi.authVerify({
-    address,
-    nonce,
-    message: msg,
-    signature,
-  });
-  return out.token;
-}
-
 export default function useWalletModel() {
   const {
     status,
     address: solanaAddress,
+    connectors,
+    isReady,
     connect: connectSolana,
     disconnect: disconnectSolana,
     signMessageBase58,
@@ -200,7 +190,10 @@ export default function useWalletModel() {
   const signIn = useCallback(async (addr: string) => {
     setAuthing(true);
     try {
-      const t = await runAuthHandshake(addr, signMessageBase58);
+      const t = await runAuthHandshake(addr, signMessageBase58, {
+        nonce: polymindApi.authNonce,
+        verify: polymindApi.authVerify,
+      });
       tokenStore.set(t);
       setToken(t);
       setAuthedAddr(addr);
@@ -241,31 +234,24 @@ export default function useWalletModel() {
     return () => window.removeEventListener('polymind-admin-401', handler);
   }, [address, signIn, message]);
 
-  const connect = useCallback(async () => {
-    // Default connector list mirrors web-app: Phantom, Solflare, Backpack.
-    const connectors = [
-      'wallet-standard:phantom',
-      'wallet-standard:solflare',
-      'wallet-standard:backpack',
-    ];
-    let lastError: Error | undefined;
-    for (const id of connectors) {
-      try {
-        await connectSolana(id);
-        // The Solana hook updates state asynchronously; wait briefly for it.
-        for (let i = 0; i < 40; i++) {
-          const latest = latestAddressRef.current;
-          if (latest) return latest;
-          await new Promise((r) => setTimeout(r, 50));
-        }
-        const fallback = latestAddressRef.current || addrStore.get();
-        if (fallback) return fallback;
-      } catch (e) {
-        lastError = e as Error;
+  const connect = useCallback(
+    async (connectorId?: string) => {
+      // Prefer the requested connector, then Phantom, then the first detected wallet.
+      const targetId =
+        connectorId ||
+        connectors.find((c) => c.id === 'wallet-standard:phantom')?.id ||
+        connectors[0]?.id;
+      if (!targetId) {
+        throw new Error('No Solana wallet detected. Install Phantom, Solflare, or Backpack.');
       }
-    }
-    throw lastError || new Error('No Solana wallet available');
-  }, [connectSolana]);
+      const addr = await connectSolana(targetId);
+      if (!addr) {
+        throw new Error('Wallet did not return an address');
+      }
+      return addr;
+    },
+    [connectSolana, connectors]
+  );
 
   const disconnect = useCallback(async () => {
     disconnectSolana();
@@ -300,24 +286,21 @@ export default function useWalletModel() {
     [signerHex],
   );
 
-  const openWalletPicker = useCallback(async () => {
+  const openWalletPicker = useCallback(async (preferredConnectorId?: string): Promise<string | undefined> => {
     try {
-      disconnectSolana();
-      await connectSolana('wallet-standard:phantom');
-      for (let i = 0; i < 40; i++) {
-        const latest = latestAddressRef.current;
-        if (latest) {
-          setAddress(latest);
-          addrStore.set(latest);
-          return;
-        }
-        await new Promise((r) => setTimeout(r, 50));
+      await disconnectSolana();
+      const a = await connect(preferredConnectorId);
+      if (a) {
+        setAddress(a);
+        addrStore.set(a);
       }
+      return a;
     } catch (e) {
       const msg = (e as Error).message || 'Wallet not ready';
       if (!/reject|cancel|denied/i.test(msg)) message.error(msg);
+      return undefined;
     }
-  }, [connectSolana, disconnectSolana, message]);
+  }, [connect, disconnectSolana, message]);
 
   useEffect(() => {
     if (!token) return;
@@ -372,6 +355,8 @@ export default function useWalletModel() {
     contractAddr,
     adminEventContractAddr,
     championContractAddr,
+    connectors,
+    isReady,
     connect,
     disconnect,
     signIn,
