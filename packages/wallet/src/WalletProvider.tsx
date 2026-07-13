@@ -1,11 +1,9 @@
 "use client";
 
-import type { SolanaClientConfig } from "@solana/client";
+import type { SolanaClientConfig, WalletConnector } from "@solana/client";
 import {
   SolanaProvider,
-  useConnectWallet as useSolanaConnect,
-  useDisconnectWallet as useSolanaDisconnect,
-  useWallet as useSolanaWallet,
+  useWalletConnection,
   useWalletSession,
 } from "@solana/react-hooks";
 import bs58 from "bs58";
@@ -20,6 +18,10 @@ import {
 
 export type { SolanaClientConfig } from "@solana/client";
 
+export const MOCK_CONNECTOR_ID = "__mock__";
+export const isMockConnectorId = (connectorId: string) =>
+  connectorId === MOCK_CONNECTOR_ID;
+
 const MOCK_ADDRESS = "MockUser111111111111111111111111111111111111";
 
 export type WalletStatus = "connected" | "connecting" | "disconnected";
@@ -28,7 +30,13 @@ export type WalletContextValue = {
   status: WalletStatus;
   address: string | null;
   isMock: boolean;
-  connect: (connectorId: string) => Promise<void>;
+  /** Wallet Standard connectors detected in the browser. */
+  connectors: readonly WalletConnector[];
+  /** True once the SDK has finished client-side hydration and wallet detection. */
+  isReady: boolean;
+  /** Current connector id, if connected. */
+  connectorId?: string;
+  connect: (connectorId: string) => Promise<string | undefined>;
   disconnect: () => void;
   signMessage: (message: Uint8Array) => Promise<Uint8Array>;
   signMessageBase58: (message: string | Uint8Array) => Promise<string>;
@@ -37,52 +45,56 @@ export type WalletContextValue = {
 const WalletContext = createContext<WalletContextValue | null>(null);
 
 function WalletContextProvider({ children }: { children: ReactNode }) {
-  const solana = useSolanaWallet();
+  const {
+    connectors,
+    connect,
+    disconnect,
+    status: sdkStatus,
+    isReady,
+    wallet,
+    currentConnector,
+  } = useWalletConnection();
   const session = useWalletSession();
-  const connectSolana = useSolanaConnect();
-  const disconnectSolana = useSolanaDisconnect();
   const [mockAddress, setMockAddress] = useState<string | null>(null);
 
   const isMock = Boolean(mockAddress);
 
   const address = useMemo(() => {
     if (mockAddress) return mockAddress;
-    if (solana.status === "connected" && solana.session) {
-      return solana.session.account.address.toString();
-    }
-    return null;
-  }, [mockAddress, solana]);
+    return wallet?.account.address.toString() ?? null;
+  }, [mockAddress, wallet]);
 
   const status: WalletStatus = useMemo(() => {
-    if (isMock || solana.status === "connected") return "connected";
-    if (solana.status === "connecting") return "connecting";
+    if (isMock) return "connected";
+    if (sdkStatus === "connected") return "connected";
+    if (sdkStatus === "connecting") return "connecting";
     return "disconnected";
-  }, [isMock, solana.status]);
+  }, [isMock, sdkStatus]);
 
-  const connect = useCallback(
+  const connectWrapped = useCallback(
     async (connectorId: string) => {
-      if (connectorId === "__mock__") {
+      if (isMockConnectorId(connectorId)) {
         setMockAddress(MOCK_ADDRESS);
-        return;
+        return MOCK_ADDRESS;
       }
-      await connectSolana(connectorId, { autoConnect: true });
+      const session = await connect(connectorId);
+      return session.account.address.toString();
     },
-    [connectSolana]
+    [connect]
   );
 
-  const disconnect = useCallback(() => {
+  const disconnectWrapped = useCallback(() => {
     if (mockAddress) {
       setMockAddress(null);
       return;
     }
-    disconnectSolana();
-  }, [mockAddress, disconnectSolana]);
+    disconnect();
+  }, [mockAddress, disconnect]);
 
   const signMessage = useCallback(
     async (message: Uint8Array) => {
       if (isMock) {
         // Mock signature: deterministic fake bytes for dev/testing.
-        // In a real mock you might use a seeded keypair; this is enough for UI dev.
         return new Uint8Array(64).fill(0x42);
       }
       if (!session?.signMessage) {
@@ -104,8 +116,30 @@ function WalletContextProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ status, address, isMock, connect, disconnect, signMessage, signMessageBase58 }),
-    [status, address, isMock, connect, disconnect, signMessage, signMessageBase58]
+    () => ({
+      status,
+      address,
+      isMock,
+      connectors,
+      isReady,
+      connectorId: currentConnector?.id,
+      connect: connectWrapped,
+      disconnect: disconnectWrapped,
+      signMessage,
+      signMessageBase58,
+    }),
+    [
+      status,
+      address,
+      isMock,
+      connectors,
+      isReady,
+      currentConnector?.id,
+      connectWrapped,
+      disconnectWrapped,
+      signMessage,
+      signMessageBase58,
+    ]
   );
 
   return (
@@ -149,4 +183,5 @@ export {
   useConnectWallet,
   useDisconnectWallet,
   useWalletSession,
+  useWalletConnection,
 } from "@solana/react-hooks";
