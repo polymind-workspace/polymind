@@ -6,7 +6,7 @@
 
 ## 一、现状结论
 
-- 当前 `polymind/polymind/solana/programs/polymind` 几乎为空壳，只实现了 `emit_test_event` 一个测试指令。
+- 当前 `polymind/polymind/solana/programs/polymind` 已实现一个最小 Hello World counter（`initialize` + `increment`），作为 Anchor 编译、部署和本地 validator 的基线验证。
 - 旧 Move 合约已完整实现 `market`、`dispute`、`admin`、`reward_vault`、`champion`、`adminevent`、`payouts`、`subscription` 八大模块。
 - `apps/api` 已预留好 indexer、parser、router，等待真实的 Solana 指令、事件和 PDA。
 - 必须同步更新 `apps/api/app/services/chain_parser.py` / `champion_parser.py` 的 discriminators、Borsh 解码和 IDL。
@@ -67,11 +67,10 @@
 1. 启动 PostgreSQL（Docker Compose）
 2. 启动 `solana-test-validator`
 3. 部署 `polymind` 程序到 localnet
-4. 调用 `initialize`（当合约实现后）
-5. 运行 Alembic 迁移
-6. 启动 API、workers、web、admin
+4. 运行 Alembic 迁移
+5. 启动 API、workers、web、admin
 
-当前合约尚为骨架（只有 `emit_test_event`），暂无 `initialize`。待 Phase 1 实现 `Config` PDA 和 `initialize` 指令后，需要同步在 `dev.sh` 中加入自动初始化调用。
+当前 Hello World counter 不需要额外的初始化脚本。后续实现带 `Config` PDA 的 `initialize` 指令后，再按需在 `dev.sh` 或部署文档中加入自动初始化调用。
 
 
 ### 3.1 Parimutuel 程序

@@ -1,34 +1,25 @@
 use anchor_lang::prelude::*;
 
-declare_id!("GRzZ7B6ZzgU2TuvmTFhtPHbc98CScGLw6h5McTM4SXT5");
+pub mod constants;
+pub mod error;
+pub mod instructions;
+pub mod state;
 
-/// PolyMind prediction market program (minimum skeleton).
+pub use constants::*;
+pub use instructions::*;
+pub use state::*;
+
+declare_id!("7c7Btev54kA36Nx5iq6LrzBhT9K4p6hKD1Tv4CjZ7qAv");
+
 #[program]
 pub mod polymind {
     use super::*;
 
-    /// Emit a test event. Used to verify the indexer <-> API pipeline.
-    pub fn emit_test_event(ctx: Context<EmitTestEvent>, message: String) -> Result<()> {
-        emit!(TestEvent {
-            user: ctx.accounts.user.key(),
-            message,
-            timestamp: Clock::get()?.unix_timestamp,
-        });
-        Ok(())
+    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+        crate::instructions::initialize::handle_initialize(ctx)
     }
-}
 
-/// Accounts required by `emit_test_event`.
-#[derive(Accounts)]
-pub struct EmitTestEvent<'info> {
-    #[account(mut)]
-    pub user: Signer<'info>,
-}
-
-/// A test event emitted to verify the entire data pipeline.
-#[event]
-pub struct TestEvent {
-    pub user: Pubkey,
-    pub message: String,
-    pub timestamp: i64,
+    pub fn increment(ctx: Context<Increment>) -> Result<()> {
+        crate::instructions::increment::handle_increment(ctx)
+    }
 }

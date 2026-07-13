@@ -127,7 +127,7 @@ anchor --version  # anchor-cli 1.0.2
 brew install pkgconf openssl
 ```
 
-编译 `solana-client` 和 `sqlx` 会用到 OpenSSL；`pkgconf` 用来定位它。
+编译 Rust 依赖以及 Python 数据库驱动会用到 OpenSSL；`pkgconf` 用来定位它。
 
 ### 6. 配置 cargo 国内镜像（推荐）
 
@@ -164,7 +164,7 @@ cp .env.example .env
 当前程序 ID 已预填：
 
 ```env
-SOLANA_PROGRAM_ID=GRzZ7B6ZzgU2TuvmTFhtPHbc98CScGLw6h5McTM4SXT5
+SOLANA_PROGRAM_ID=7c7Btev54kA36Nx5iq6LrzBhT9K4p6hKD1Tv4CjZ7qAv
 ```
 
 > `.env` 中的值默认面向 **devnet**。本地开发时 `./dev.sh local` 会自动覆盖为 localnet 配置，不需要改动 `.env`。
@@ -259,29 +259,17 @@ uv run python -m app.workers.referral_reward_worker
 
 ## Solana 端到端验证
 
-部署程序并启动 `app.workers.indexer` 后，调用 `emit_test_event`：
+当前链上程序是一个最小 Hello World counter，用于验证 Anchor 编译、部署和本地 validator 流水线：
 
 ```bash
 cd solana/programs/polymind
-anchor run test
+anchor build
+anchor deploy --provider.cluster localnet
 ```
 
-或者手动用 `solana program invoke` / TypeScript 脚本调用 `emit_test_event`。
+部署成功后，可继续用 Anchor TS 客户端或 `solana program invoke` 调用 `initialize` / `increment` 指令。
+Indexer 会在后续实现真实预测市场事件后接入。旧 `emit_test_event` 验证流程已不再适用。
 
-然后检查：
-
-```bash
-# PostgreSQL 中应有 chain_event_log 记录
-SELECT * FROM chain_event_log WHERE kind = 'TestEvent';
-
-# API 查询事件
-curl http://localhost:8300/api/v1/solana-events
-
-# API 确认交易
-curl -X POST http://localhost:8300/api/v1/sync \
-  -H "Content-Type: application/json" \
-  -d '{"signature": "...", "kind": "test_event"}'
-```
 
 ---
 
@@ -390,4 +378,4 @@ anchor build
 - `.env` 文件不要提交 git（已加入 `.gitignore`）。
 - Anchor 程序首次 `cargo build` 较慢，请耐心等待。
 - localnet 每次重启 `solana-test-validator` 后状态会清空，`dev.sh local` 会自动重新部署合约。
-- 当前程序 ID：`GRzZ7B6ZzgU2TuvmTFhtPHbc98CScGLw6h5McTM4SXT5`
+- 当前程序 ID：`7c7Btev54kA36Nx5iq6LrzBhT9K4p6hKD1Tv4CjZ7qAv`

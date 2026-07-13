@@ -152,7 +152,7 @@ async def seed_admin(session: AsyncSession) -> None:
 
 
 async def seed_default_user(session: AsyncSession) -> None:
-    address = "GRzZ7B6ZzgU2TuvmTFhtPHbc98CScGLw6h5McTM4SXT5"
+    address = "7c7Btev54kA36Nx5iq6LrzBhT9K4p6hKD1Tv4CjZ7qAv"  # placeholder dev user/admin address; replace with real keypair in production
     existing = await session.execute(select(User).where(User.address == address))
     if existing.scalar_one_or_none() is None:
         session.add(

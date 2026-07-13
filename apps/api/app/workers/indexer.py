@@ -18,7 +18,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
-from app.clients.solana import SolanaClient
+from app.clients.solana import SignatureNotFoundError, SolanaClient
 from app.core.config import settings
 from app.db.session import AsyncSessionLocal
 from app.models.dispute import Dispute
@@ -49,6 +49,7 @@ from app.services.chain_parser import (
     PolyMindEventType,
     fetch_and_parse_transaction,
 )
+from app.services.chain_parser import ChainParserError
 from app.services.indexer_service import persist_chain_event
 from app.utils.slugify import unique_event_slug, unique_market_slug
 
@@ -76,7 +77,7 @@ class IndexerCursor:
             self.signature = row.signature
             self.slot = row.slot
 
-    async def save(self, db: Any, signature: str, slot: int) -> None:
+    async def save(self, db: Any, signature: str | None, slot: int) -> None:
         """Persist cursor, overwriting the single global row."""
         self.signature = signature
         self.slot = slot
@@ -936,11 +937,19 @@ async def run_indexer() -> None:
             async with AsyncSessionLocal() as db:
                 await cursor.load(db)
 
-                signatures = await client.get_signatures_for_address(
-                    account=settings.solana_program_id,
-                    until=cursor.signature,
-                    limit=1000,
-                )
+                try:
+                    signatures = await client.get_signatures_for_address(
+                        account=settings.solana_program_id,
+                        until=cursor.signature,
+                        limit=1000,
+                    )
+                except SignatureNotFoundError as exc:
+                    logger.warning("%s; resetting indexer cursor", exc)
+                    cursor.signature = None
+                    cursor.slot = 0
+                    await cursor.save(db, signature=None, slot=0)
+                    await db.commit()
+                    continue
 
                 if not signatures:
                     logger.debug(
@@ -960,7 +969,11 @@ async def run_indexer() -> None:
                 # get_signatures_for_address returns newest-first;
                 # process oldest-first so cursor always moves forward monotonically.
                 for signature in reversed(signatures):
-                    slot = await process_signature(client, signature, db)
+                    try:
+                        slot = await process_signature(client, signature, db)
+                    except ChainParserError as exc:
+                        logger.warning("Skipping signature %s: %s", signature, exc)
+                        slot = cursor.slot
                     await cursor.save(db, signature=signature, slot=slot)
 
                 await db.commit()

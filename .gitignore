@@ -265,6 +265,8 @@ solana/**/node_modules/
 solana/**/yarn.lock
 solana/**/package-lock.json
 solana/**/test-ledger/
+test-ledger/
+apps/**/test-ledger/
 
 # User assets (uploads + rendered outputs; user-scoped under assets/)
 assets/*

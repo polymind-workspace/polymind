@@ -1,6 +1,7 @@
 """Solana RPC client."""
 
 import json
+import logging
 from typing import Any
 
 from solana.rpc.async_api import AsyncClient
@@ -12,6 +13,12 @@ from solders.system_program import TransferParams, transfer
 from solders.transaction import Transaction
 
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
+
+
+class SignatureNotFoundError(Exception):
+    """Raised when a pagination signature is no longer available on chain."""
 
 
 class SolanaClient:
@@ -132,6 +139,24 @@ class SolanaClient:
             limit=limit,
             commitment=commitment,
         )
+
+        # solana-py + httpx2 can return a raw RPC error code as an int when the
+        # `until` signature no longer exists (e.g., localnet was reset). Detect
+        # that case and raise a dedicated exception so the caller can reset its
+        # cursor instead of retrying forever.
+        if not hasattr(resp, "value"):
+            if until:
+                tx_resp = await self.client.get_transaction(
+                    Signature.from_string(until),
+                    max_supported_transaction_version=0,
+                )
+                if tx_resp.value is None:
+                    raise SignatureNotFoundError(
+                        f"pagination signature {until} not found on chain; cursor may be stale"
+                    )
+            logger.warning("Unexpected get_signatures_for_address response: %r", resp)
+            return []
+
         if resp.value is None:
             return []
         return [str(item.signature) for item in resp.value]
