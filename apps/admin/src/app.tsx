@@ -52,9 +52,13 @@ export const request: RequestConfig = {
   ...errorConfig,
 };
 
+const solanaCluster = (process.env.VITE_SOLANA_CLUSTER as string) || 'devnet';
+const solanaRpc = (process.env.VITE_SOLANA_RPC as string) || 'https://api.devnet.solana.com';
+const solanaWs = (process.env.VITE_SOLANA_WS as string) || 'wss://api.devnet.solana.com';
+
 export function rootContainer(container: React.ReactNode) {
   return (
-    <WalletProvider>
+    <WalletProvider config={{ cluster: solanaCluster, rpc: solanaRpc, websocket: solanaWs }}>
       <OfflineBanner />
       <ErrorBoundary>{container}</ErrorBoundary>
     </WalletProvider>

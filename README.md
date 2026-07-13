@@ -3,6 +3,7 @@
 基于 Solana 的预测市场平台。
 
 - **Web 前端**：响应式 Web App（原微信小程序 superbox 迁移）
+- **Admin 前端**：Ant Design Pro + umi/max（端口 3200）
 - **后端**：FastAPI + SQLAlchemy 2.0 (async) + Alembic + PostgreSQL
 - **链上程序**：Anchor（Rust）
 - **索引器**：Python Worker（`apps/api/app/workers/`），轮询 Solana RPC、解析 program logs 写入 PostgreSQL
@@ -14,13 +15,14 @@
 | 层级 | 技术 |
 |---|---|
 | 前端 | TanStack Start + React 19 + TypeScript |
+| 管理后台 | umi/max (Ant Design Pro) + React 19 |
 | 样式 | Tailwind CSS v4 + shadcn/ui (base-ui) |
 | 钱包 | `@solana/react-hooks` + `@solana/client` |
 | 后端 | FastAPI + SQLAlchemy 2.0 async + Alembic |
 | 数据库 | PostgreSQL 18（Docker，端口 5433） |
 | 链上程序 | Anchor (Rust) |
 | 索引器 | Python Worker (`apps/api/app/workers/`) |
-| 包管理 | pnpm (web) + uv (api) + Cargo (solana) |
+| 包管理 | pnpm (web/admin) + uv (api) + Cargo (solana) |
 
 ---
 
@@ -31,7 +33,7 @@
 ├── apps/
 │   ├── web/                  # 核心前端（端口 3100）
 │   ├── api/                  # FastAPI（端口 8300）
-│   └── admin/                # 占位，未接入
+│   └── admin/                # 管理后台（端口 3200）
 ├── solana/
 │   └── programs/polymind/    # Anchor 程序
 ├── docs/
@@ -39,7 +41,7 @@
 │   ├── progress.md           # 当前进展
 │   └── PLAN.md               # 第一阶段实施计划
 ├── dev.sh                    # 一键启动 web + admin + api + workers
-├── docker-compose.yml        # PostgreSQL
+├── apps/api/docker-compose.yml  # PostgreSQL
 ├── package.json
 └── README.md
 ```
@@ -71,6 +73,7 @@
 - [Python >= 3.11](https://www.python.org/)
 - [uv](https://docs.astral.sh/uv/getting-started/installation/)
 - [Rust](https://www.rust-lang.org/tools/install)
+- [Docker / Docker Compose](https://docs.docker.com/get-docker/)
 - [Homebrew](https://brew.sh/)（macOS 上需要 openssl/pkgconf）
 
 ### 2. 安装 Rust 1.89.0
@@ -164,70 +167,59 @@ cp .env.example .env
 SOLANA_PROGRAM_ID=GRzZ7B6ZzgU2TuvmTFhtPHbc98CScGLw6h5McTM4SXT5
 ```
 
-### 3. 启动 PostgreSQL
+> `.env` 中的值默认面向 **devnet**。本地开发时 `./dev.sh local` 会自动覆盖为 localnet 配置，不需要改动 `.env`。
+
+### 3. 一键启动
 
 ```bash
-docker-compose up -d
+# 本地 localnet（推荐，默认）
+./dev.sh
+# 或显式指定
+./dev.sh local
 ```
 
-### 4. 编译 Anchor 程序
+`./dev.sh local` 会自动完成：
 
-```bash
-cd solana/programs/polymind
-anchor build
-```
+1. 启动 PostgreSQL（Docker Compose）
+2. 启动 `solana-test-validator`（如果未运行）
+3. 编译并部署 `polymind` 程序到 localnet（如果未部署）
+4. 运行 Alembic 数据库迁移
+5. 启动 API（端口 8300）
+6. 启动 Python workers
+7. 启动 Web 前端（端口 3100）
+8. 启动 Admin 前端（端口 3200）
 
-首次编译会下载大量 Rust 依赖，耗时几分钟。
+启动后访问：
 
-### 5. 部署到 devnet（首次）
-
-确保钱包有 devnet SOL：
-
-```bash
-solana config set --url devnet
-solana airdrop 2
-solana balance
-```
-
-> 如果 `solana airdrop` 因为网络失败，可以去 [Solana Faucet](https://faucet.solana.com/) 手动领水，或开代理重试。
-
-然后部署：
-
-```bash
-cd solana/programs/polymind
-anchor deploy --provider.cluster devnet
-```
-
-如果 `anchor keys sync` 还没跑过，先同步 program id：
-
-```bash
-anchor keys sync
-anchor build
-anchor deploy --provider.cluster devnet
-```
-
-### 6. 一键启动
-
-```bash
-bash dev.sh
-```
-
-启动内容：
-
-- Web：`http://localhost:3100`
-- Admin：`http://localhost:8000`
-- API：`http://localhost:8300/health`
-- API 文档：`http://localhost:8300/docs`
-- Python workers（由 `dev.sh` 自动拉起）：
-  - `app.workers.indexer`（需配置 `SOLANA_PROGRAM_ID`）
-  - `app.workers.champion_indexer`
-  - `app.workers.notification_worker`
-  - `app.workers.deadline_cron`
-  - `app.workers.referral_reward_worker`
+| 服务 | 地址 |
+|---|---|
+| Web | http://localhost:3100 |
+| Admin | http://localhost:3200 |
+| API | http://localhost:8300/health |
+| API 文档 | http://localhost:8300/docs |
 
 关闭时按 `Ctrl-C`，`dev.sh` 会同时杀掉所有子进程。
 
-### 7. 单独启动
+### 4. 使用 devnet
+
+如果你网络能访问 devnet，也可以：
+
+```bash
+./dev.sh dev
+```
+
+这会自动检查 devnet 上程序是否已部署。若未部署，需要手动执行：
+
+```bash
+cd solana/programs/polymind
+solana config set --url devnet
+solana airdrop 2
+anchor deploy --provider.cluster devnet
+```
+
+> devnet 在国内可能访问超时，推荐本地开发使用 `./dev.sh local`。
+
+### 5. 单独启动
 
 ```bash
 # 前端
@@ -251,7 +243,7 @@ uv run python -m app.workers.referral_reward_worker
 
 | 命令 | 说明 |
 |---|---|
-| `pnpm dev` | 启动 `dev.sh` |
+| `pnpm dev` | 启动 `dev.sh`（默认 localnet） |
 | `pnpm dev:web` | 只启动前端 |
 | `pnpm dev:api` | 只启动后端（含 Alembic 迁移）|
 | `pnpm build` | 构建前端（client + SSR）|
@@ -378,7 +370,7 @@ anchor build
 **解决**：
 - 开代理/VPN 后重试
 - 或去 [Solana Faucet](https://faucet.solana.com/) 手动领取
-- 或改用 localnet：`solana-test-validator` + `anchor deploy --provider.cluster localnet`
+- **推荐**：改用 localnet：`./dev.sh local`
 
 ---
 
@@ -394,9 +386,8 @@ anchor build
 
 ## 注意事项
 
-- 端口故意选为 `3100/8300`，避免与 repurposer（3000/8000）冲突。
+- 端口故意选为 `3100/3200/8300`，避免与常见端口冲突。
 - `.env` 文件不要提交 git（已加入 `.gitignore`）。
-- `apps/admin` 目前只是空文件夹，后续阶段接入。
 - Anchor 程序首次 `cargo build` 较慢，请耐心等待。
-- devnet 需要 Solana CLI 钱包有少量 DEVNET SOL 支付 gas。
+- localnet 每次重启 `solana-test-validator` 后状态会清空，`dev.sh local` 会自动重新部署合约。
 - 当前程序 ID：`GRzZ7B6ZzgU2TuvmTFhtPHbc98CScGLw6h5McTM4SXT5`
