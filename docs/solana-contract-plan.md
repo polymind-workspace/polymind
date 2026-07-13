@@ -24,10 +24,55 @@
 | Event ID | 全局自增 `EventCounter` PDA，避免调用方指定。 |
 | 争议 | 每个 `Market` 内置 `is_disputed: bool`，一旦置 true 永久禁止 `finalize_proposed`。 |
 | Vault | 每个 Market 一个 SPL ATA，authority 为 Market PDA；平台费和 creator reward 各一个聚合 treasury ATA。 |
+| 初始化 | 使用显式 `initialize` 创建 `Config` PDA，而非懒加载。权限清晰，适合含 admin/treasury/fee 等敏感配置的程序。 |
 
 ---
 
-## 三、PDA 设计
+## 二点一、关于 `initialize` 与部署/本地开发
+
+### 2.1.1 为什么用显式 `initialize` 而不是懒加载？
+
+`initialize` 负责创建程序的**全局配置账户** `Config`，写入初始 admin 列表、treasury 地址、平台费率等全局参数。显式初始化优于懒加载的原因：
+
+| 对比 | 懒加载 | 显式 `initialize` |
+|---|---|---|
+| 权限 | 第一个触发者创建 Config，存在恶意初始化风险 | 只有部署者/指定 payer 能创建，权限可控 |
+| Gas | 首次交互用户额外承担创建费用 | 部署者单独承担初始化费用 |
+| 代码复杂度 | 每个指令都需判断 Config 是否存在 | 直接读取 Config，逻辑更干净 |
+| 安全审计 | 难审计 | 权限清晰，审计友好 |
+
+因此，对于含 admin、treasury、fee 等敏感配置的预测市场程序，**显式 `initialize` 是标准做法**。
+
+### 2.1.2 localnet 与 devnet 的部署差异
+
+| 操作 | devnet | localnet（`solana-test-validator`） |
+|---|---|---|
+| 部署合约 | 一次 | 每次重启 validator 都需重新部署 |
+| `initialize` 创建 Config | 一次 | 每次重启 validator 都需重新初始化 |
+| 日常交易状态 | 持久保存 | 重启后清空 |
+
+**注意**：`initialize` 不是为了 localnet 才存在的；在 devnet 上同样需要调用一次。只是 localnet 状态不持久，所以 `./dev.sh local` 必须自动完成「启动 validator → 部署合约 → initialize → 启动服务」整条流水线。
+
+### 2.1.3 本地一键启动
+
+项目根目录 `dev.sh` 已支持：
+
+```bash
+./dev.sh        # 默认 localnet
+./dev.sh local  # 同上
+./dev.sh dev    # devnet（需网络可访问）
+```
+
+`./dev.sh local` 会自动：
+1. 启动 PostgreSQL（Docker Compose）
+2. 启动 `solana-test-validator`
+3. 部署 `polymind` 程序到 localnet
+4. 调用 `initialize`（当合约实现后）
+5. 运行 Alembic 迁移
+6. 启动 API、workers、web、admin
+
+当前合约尚为骨架（只有 `emit_test_event`），暂无 `initialize`。待 Phase 1 实现 `Config` PDA 和 `initialize` 指令后，需要同步在 `dev.sh` 中加入自动初始化调用。
+
 
 ### 3.1 Parimutuel 程序
 
