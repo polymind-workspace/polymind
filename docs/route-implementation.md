@@ -100,7 +100,7 @@ SIWS message 格式示例：
 
 ```text
 poly-mind.ai wants you to sign in with your Solana account:
-GRzZ7B6ZzgU2TuvmTFhtPHbc98CScGLw6h5McTM4SXT5
+7c7Btev54kA36Nx5iq6LrzBhT9K4p6hKD1Tv4CjZ7qAv
 
 URI: https://poly-mind.ai
 Version: 1

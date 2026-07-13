@@ -1,3 +1,5 @@
+skip_local_validator = true
+
 [toolchain]
 
 [features]
@@ -5,10 +7,10 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-polymind = "GRzZ7B6ZzgU2TuvmTFhtPHbc98CScGLw6h5McTM4SXT5"
+polymind = "7c7Btev54kA36Nx5iq6LrzBhT9K4p6hKD1Tv4CjZ7qAv"
 
 [programs.localnet]
-polymind = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+polymind = "7c7Btev54kA36Nx5iq6LrzBhT9K4p6hKD1Tv4CjZ7qAv"
 
 [provider]
 cluster = "devnet"

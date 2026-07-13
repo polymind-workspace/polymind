@@ -25,10 +25,17 @@ if [ -f .env ]; then
   set +a
 fi
 
-PROGRAM_ID="${SOLANA_PROGRAM_ID:-GRzZ7B6ZzgU2TuvmTFhtPHbc98CScGLw6h5McTM4SXT5}"
+PROGRAM_ID="${SOLANA_PROGRAM_ID:-7c7Btev54kA36Nx5iq6LrzBhT9K4p6hKD1Tv4CjZ7qAv}"
 
 if [ "$MODE" = "local" ]; then
   echo "==> Using Solana localnet"
+
+  # Use the program ID declared in Anchor.toml for localnet, so a regenerated
+  # deploy keypair does not require manually editing .env.
+  PROGRAM_ID=$(grep -A1 '^\[programs.localnet\]' solana/programs/polymind/Anchor.toml | grep 'polymind' | cut -d= -f2 | tr -d ' "')
+  if [ -z "$PROGRAM_ID" ]; then
+    PROGRAM_ID="7c7Btev54kA36Nx5iq6LrzBhT9K4p6hKD1Tv4CjZ7qAv"
+  fi
 
   # Override Solana network env vars for localnet.
   # Vite and pydantic-settings both respect existing environment variables
@@ -36,8 +43,10 @@ if [ "$MODE" = "local" ]; then
   export VITE_SOLANA_CLUSTER=localnet
   export VITE_SOLANA_RPC=http://localhost:8899
   export VITE_SOLANA_WS=ws://localhost:8900
+  export VITE_SOLANA_PROGRAM_ID="$PROGRAM_ID"
   export SOLANA_CLUSTER=localnet
   export SOLANA_RPC_URL=http://localhost:8899
+  export SOLANA_PROGRAM_ID="$PROGRAM_ID"
 
   # Start solana-test-validator if not already running.
   if ! curl -s -X POST -H "Content-Type: application/json" \
@@ -70,6 +79,7 @@ if [ "$MODE" = "local" ]; then
   else
     echo "==> polymind program already deployed on localnet"
   fi
+
 else
   echo "==> Using Solana devnet"
   if ! solana program show "$PROGRAM_ID" -u devnet >/dev/null 2>&1; then
