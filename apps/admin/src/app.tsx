@@ -1,3 +1,4 @@
+import type { ClusterMoniker } from '@polymind/wallet';
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
 import type { RequestConfig, RunTimeLayoutConfig } from '@umijs/max';
 import { Link, SelectLang } from '@umijs/max';
@@ -52,7 +53,22 @@ export const request: RequestConfig = {
   ...errorConfig,
 };
 
-const solanaCluster = (process.env.VITE_SOLANA_CLUSTER as string) || 'devnet';
+const VALID_CLUSTERS: ClusterMoniker[] = [
+  'mainnet',
+  'mainnet-beta',
+  'testnet',
+  'devnet',
+  'localnet',
+  'localhost',
+];
+
+const rawCluster = process.env.VITE_SOLANA_CLUSTER || 'devnet';
+if (!VALID_CLUSTERS.includes(rawCluster as ClusterMoniker)) {
+  throw new Error(
+    `Invalid VITE_SOLANA_CLUSTER: "${rawCluster}". Expected one of ${VALID_CLUSTERS.join(', ')}.`,
+  );
+}
+const solanaCluster: ClusterMoniker = rawCluster as ClusterMoniker;
 const solanaRpc = (process.env.VITE_SOLANA_RPC as string) || 'https://api.devnet.solana.com';
 const solanaWs = (process.env.VITE_SOLANA_WS as string) || 'wss://api.devnet.solana.com';
 

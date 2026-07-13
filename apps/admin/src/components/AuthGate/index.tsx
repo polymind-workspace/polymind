@@ -1,30 +1,36 @@
 import { WalletOutlined } from '@ant-design/icons';
-import { useModel } from '@umijs/max';
+import { useModel, useIntl } from '@umijs/max';
 import { Button, Typography } from 'antd';
 import { type ReactNode } from 'react';
-
-const shorten = (a: string) =>
-  a.length > 14 ? `${a.slice(0, 8)}…${a.slice(-6)}` : a;
+import { shortenAddress } from '@/utils/address';
 
 export default function AuthGate({ children }: { children: ReactNode }) {
-  const { address, isAdmin, authing, connect, disconnect, signIn } =
+  const intl = useIntl();
+  const tr = (id: string, values?: Record<string, string | number>) =>
+    intl.formatMessage({ id }, values);
+  const { address, isAdmin, authing, isReady, connectors, connect, disconnect, signIn } =
     useModel('wallet');
 
   if (address && isAdmin) return <>{children}</>;
+
+  const hasWallet = isReady && connectors.length > 0;
 
   let title: string;
   let body: ReactNode;
   let primary: ReactNode;
 
   if (!address) {
-    title = 'Connect wallet to continue';
-    body = 'PolyMind admin actions require a wallet on the admin list.';
+    title = tr('auth.connect.title');
+    body = hasWallet
+      ? tr('auth.connect.body.hasWallet')
+      : tr('auth.connect.body.noWallet');
     primary = (
       <Button
         type="primary"
         size="large"
         icon={<WalletOutlined />}
         loading={authing}
+        disabled={!hasWallet}
         onClick={async () => {
           try {
             const a = await connect();
@@ -32,15 +38,14 @@ export default function AuthGate({ children }: { children: ReactNode }) {
           } catch {}
         }}
       >
-        Connect & sign in
+        {hasWallet ? tr('auth.connect.signIn') : tr('auth.connect.noWalletButton')}
       </Button>
     );
   } else {
-    title = 'Sign in to verify wallet';
+    title = tr('auth.verify.title');
     body = (
       <>
-        Connected as <Typography.Text code>{shorten(address)}</Typography.Text>.
-        Sign a one-time message so the backend can issue a session token.
+        {tr('auth.verify.body', { address: shortenAddress(address) })}
       </>
     );
     primary = (
@@ -51,10 +56,10 @@ export default function AuthGate({ children }: { children: ReactNode }) {
           loading={authing}
           onClick={() => signIn(address).catch(() => {})}
         >
-          Sign in
+          {tr('auth.verify.signIn')}
         </Button>
         <Button type="link" onClick={() => disconnect()}>
-          Disconnect
+          {tr('auth.verify.disconnect')}
         </Button>
       </>
     );

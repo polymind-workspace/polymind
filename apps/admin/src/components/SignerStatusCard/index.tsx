@@ -1,9 +1,9 @@
 import { Alert, Button, Card, Space, Spin, Tag, Typography } from 'antd';
 import { SwapOutlined } from '@ant-design/icons';
 import { history, useIntl, useModel } from '@umijs/max';
+import { shortenAddress } from '@/utils/address';
 
 const { Text, Link } = Typography;
-const shorten = (a: string) => (a && a.length > 12 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a);
 
 export type SignerRole = 'admin' | 'creator' | 'distributor' | 'adminevent' | 'champion';
 
@@ -56,7 +56,7 @@ export default function SignerStatusCard({ role = 'admin', targetAddress, target
       <Space size="middle" wrap>
         <Text type="secondary">{t('signer.label')}</Text>
         <Text code copyable={{ text: address || '' }}>
-          {address ? shorten(address) : '—'}
+          {address ? shortenAddress(address) : '—'}
         </Text>
         {!isTargetMode && !ready ? (
           <Tag color="default"><Spin size="small" /> {t('signer.checking')}</Tag>
@@ -65,7 +65,7 @@ export default function SignerStatusCard({ role = 'admin', targetAddress, target
             {ok ? t(labelKey('ok')) : t(labelKey('notAllowed'))}
           </Tag>
         )}
-        <Button size="small" icon={<SwapOutlined />} onClick={openWalletPicker}>
+        <Button size="small" icon={<SwapOutlined />} onClick={() => openWalletPicker()}>
           {t('signer.switch')}
         </Button>
       </Space>

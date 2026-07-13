@@ -1,4 +1,5 @@
 import activities from './zh-CN/activities';
+import auth from './zh-CN/auth';
 import campaigns from './zh-CN/campaigns';
 import adminAccounts from './zh-CN/admin-accounts';
 import adminEvents from './zh-CN/admin-events';
@@ -60,6 +61,7 @@ export default {
   ...myQueue,
   ...disputes,
   ...activities,
+  ...auth,
   ...campaigns,
   ...imagePicker,
   ...tags,

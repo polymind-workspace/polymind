@@ -5,13 +5,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { polymindApi } from '@/services/polymind';
 import { v3ClaimCreatorReward } from '@/wallet/endless';
 import { useAdminTx } from '@/hooks/useAdminTx';
+import { shortenAddress } from '@/utils/address';
 
 const { Text } = Typography;
 const EDS = 1e8;
 const fmtEds = (b: string | number) => (Number(b) / EDS).toFixed(2);
-
-const shorten = (a: string) =>
-  a.length > 12 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a;
 
 export default function WalletWidget() {
   const intl = useIntl();
@@ -23,6 +21,8 @@ export default function WalletWidget() {
     isAdmin,
     authing,
     signerDiffersFromAuth,
+    connectors,
+    isReady,
     connect,
     disconnect,
     signIn,
@@ -53,24 +53,33 @@ export default function WalletWidget() {
     });
   };
 
+  const hasWallet = isReady && connectors.length > 0;
+
+  const handleConnect = async () => {
+    try {
+      if (!hasWallet) {
+        message.error(tr('wallet.connect.noWalletDetected'));
+        return;
+      }
+      const a = await connect();
+      try {
+        await signIn(a);
+      } catch {}
+    } catch (e) {
+      message.error((e as Error).message || tr('wallet.connect.connectFailed'));
+    }
+  };
+
   if (!address && !authedAddr) {
     return (
       <Button
         type="primary"
         icon={<WalletOutlined />}
         loading={authing}
-        onClick={async () => {
-          try {
-            const a = await connect();
-            try {
-              await signIn(a);
-            } catch {}
-          } catch (e) {
-            message.error((e as Error).message || 'Connect failed');
-          }
-        }}
+        disabled={!hasWallet}
+        onClick={handleConnect}
       >
-        Connect wallet
+        {hasWallet ? tr('wallet.connect.connectWallet') : tr('wallet.connect.noWalletDetectedButton')}
       </Button>
     );
   }
@@ -78,25 +87,34 @@ export default function WalletWidget() {
   const primary = authedAddr || address || '';
   const hasReward = Number(creatorReward) > 0;
 
+  const walletItems = connectors.map((c) => ({
+    key: `connect-${c.id}`,
+    label: tr('wallet.connect.connectWith', { name: c.name }),
+    onClick: async () => {
+      const a = await openWalletPicker(c.id);
+      if (a) await signIn(a).catch(() => {});
+    },
+  }));
+
   return (
     <Dropdown
       menu={{
         items: [
           {
             key: 'copy-auth',
-            label: `Copy login: ${shorten(primary)}`,
+            label: tr('wallet.copy.login', { address: shortenAddress(primary) }),
             onClick: () => {
               navigator.clipboard.writeText(primary);
-              message.success('Copied');
+              message.success(tr('wallet.copy.copied'));
             },
           },
           ...(address && signerDiffersFromAuth
             ? [{
                 key: 'copy-signer',
-                label: `Copy signer: ${shorten(address)}`,
+                label: tr('wallet.copy.signer', { address: shortenAddress(address) }),
                 onClick: () => {
                   navigator.clipboard.writeText(address);
-                  message.success('Copied');
+                  message.success(tr('wallet.copy.copied'));
                 },
               }]
             : []),
@@ -113,28 +131,34 @@ export default function WalletWidget() {
           { type: 'divider' as const },
           {
             key: 'switch-signer',
-            label: 'Switch signer wallet',
+            label: tr('wallet.switchSigner'),
             icon: <SwapOutlined />,
             onClick: () => openWalletPicker(),
           },
           ...(!isAdmin && address
             ? [{
                 key: 'signin',
-                label: 'Sign in with current signer',
+                label: tr('wallet.signInCurrent'),
                 onClick: () => signIn(address).catch(() => {}),
               }]
             : []),
           ...(signerDiffersFromAuth && address
             ? [{
                 key: 'rebind',
-                label: 'Re-login as current signer',
+                label: tr('wallet.reloginCurrent'),
                 onClick: () => signIn(address).catch(() => {}),
               }]
+            : []),
+          ...(walletItems.length > 0
+            ? [
+                { type: 'divider' as const },
+                ...walletItems,
+              ]
             : []),
           { type: 'divider' as const },
           {
             key: 'disconnect',
-            label: 'Disconnect',
+            label: tr('wallet.disconnect'),
             danger: true,
             onClick: () => disconnect(),
           },
@@ -143,13 +167,13 @@ export default function WalletWidget() {
     >
       <Button loading={authing}>
         <WalletOutlined />
-        {shorten(primary)}
+        {shortenAddress(primary)}
         <Tag color={isAdmin ? 'green' : 'red'} style={{ marginLeft: 8 }}>
-          {isAdmin ? 'Admin' : 'Not signed in'}
+          {isAdmin ? tr('wallet.admin') : tr('wallet.notSignedIn')}
         </Tag>
         {signerDiffersFromAuth && address && (
           <Tag color="orange" style={{ marginLeft: 0 }}>
-            <Text style={{ fontSize: 11 }}>Signer: {shorten(address)}</Text>
+            <Text style={{ fontSize: 11 }}>{tr('wallet.signerLabel', { address: shortenAddress(address) })}</Text>
           </Tag>
         )}
       </Button>
